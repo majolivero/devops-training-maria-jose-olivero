@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 @RestController
 
 public class controlador {
-    @RequestMapping(value = "/cal/suma", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/sumar", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado suma(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1,
                           @RequestParam(name = "op2", required = false, defaultValue = "0") String op2) {
 
@@ -34,7 +34,7 @@ public class controlador {
         return exported;
     }
 
-    @RequestMapping(value = "/cal/resta", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/restar", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado resta(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1,
                            @RequestParam(name = "op2", required = false, defaultValue = "0") String op2) {
 
@@ -56,7 +56,7 @@ public class controlador {
         return exported;
     }
 
-    @RequestMapping(value = "/cal/multiplicar", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/multiplicar", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado multiplicar(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1,
                                  @RequestParam(name = "op2", required = false, defaultValue = "0") String op2) {
 
@@ -78,7 +78,7 @@ public class controlador {
         return exported;
     }
 
-    @RequestMapping(value = "/cal/dividir", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/dividir", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado dividir(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1,
                              @RequestParam(name = "op2", required = false, defaultValue = "0") String op2) {
 
@@ -105,7 +105,7 @@ public class controlador {
 
     }
 
-    /*@RequestMapping(value = "/raiz_cuadrada", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/raiz", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado raiz(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1) {
         resultado export = new resultado();
         try {
@@ -114,19 +114,42 @@ public class controlador {
             if (valor < 0) {
                 throw new ArithmeticException();
             }
-            Double resultado_int = Math.sqrt(valor);
 
-            export.setResultado_raiz(resultado_int);
+            float resultadoFloat = (float) Math.sqrt(valor); // Conversión explícita
+            export.setResultado(resultadoFloat);
             export.setEstado("full");
 
         } catch (ArithmeticException negativoEx) {
-            export.setEstado("El numero es negativo");
-        } catch (NumberFormatException X){
-            export.setEstado("Error en un de los datos enviados ");
+            export.setEstado("El número es negativo");
+        } catch (NumberFormatException ex) {
+            export.setEstado("Error en uno de los datos enviados");
         }
 
         return export;
-    }*/
+    }
+    @RequestMapping(value = "/areaCircle", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public resultado circle(@RequestParam(name = "radio", required = false, defaultValue = "0") String radio) {
+        resultado area_circle = new resultado();
+        try {
+            int valor = Integer.parseInt(radio);
+
+            if (valor < 0) {
+                throw new ArithmeticException();
+            }
+
+            float resultadoFloat =(float) (Math.PI*(valor * valor) );
+            area_circle.setResultado(resultadoFloat);
+            area_circle.setEstado("ok");
+
+        } catch (ArithmeticException negativoEx) {
+            area_circle.setEstado("El número es negativo");
+        } catch (NumberFormatException ex) {
+            area_circle.setEstado("Error en uno de los datos enviados");
+        }
+
+        return area_circle;
+    }
+
 }
 
 
