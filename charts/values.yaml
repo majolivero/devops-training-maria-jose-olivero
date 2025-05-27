@@ -1,5 +1,0 @@
-deploy:
-  namespace: #{stage}#-#{namespace}#
-  acrServer: #{acrServer}#
-  secretName: #{stage}#-#{secretName}#
-  name: #{name}#
