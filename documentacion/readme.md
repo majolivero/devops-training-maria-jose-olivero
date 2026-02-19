@@ -1,0 +1,1 @@
+El objetivo principal se basa en la Descripción de la necesidad de implementar un pipeline ideal con todas las etapas completas, para así tener una demostración hacia futuros clientes de lo que Quind puede brindar a los aliados

@@ -1,0 +1,46 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.5'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	id 'java'
+	id "org.sonarqube" version "3.5.0.2730"
+	id 'jacoco'
+}
+
+group = 'com.entrenamiento'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+sonar {
+  properties {
+    property "sonar.projectKey", "demo-devsecops-quind"
+    property "sonar.organization", "demo-devsecops-quind"
+    property "sonar.host", "https://sonarcloud.io"
+  }
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	reports {
+		xml.required.set(true)
+		html.required.set(true)
+		csv.required.set(true)
+	}
+}
+

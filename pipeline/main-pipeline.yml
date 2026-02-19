@@ -1,0 +1,22 @@
+trigger: none
+
+resources:
+  repositories:
+  - repository: templates
+    name: template-pipeline
+    type: git
+    ref: feature/demo
+
+parameters: 
+- name: app
+  type: string
+  displayName: App
+  default: deploy
+  values:
+  - deploy
+  - destroy
+
+extends:
+  template: pipeline/main.yml@templates
+  parameters:
+    app: ${{ parameters.app }}
