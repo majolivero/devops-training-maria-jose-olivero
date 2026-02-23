@@ -1,5 +1,5 @@
 package com.entrenamiento.Calculadora.controlador;
-//import com.entrenamiento.Calculadora.modelo.resultado;
+import com.entrenamiento.Calculadora.modelo.resultado;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
