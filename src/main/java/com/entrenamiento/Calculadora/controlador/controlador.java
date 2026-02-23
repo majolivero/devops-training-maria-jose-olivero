@@ -14,26 +14,34 @@ import org.springframework.http.MediaType;
 //SUMA
 public class controlador {
     @RequestMapping(value = "/sumar", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public resultado suma(@RequestParam(name = "op1", required = false, defaultValue = "0") String op1,
-                          @RequestParam(name = "op2", required = false, defaultValue = "0") String op2) {
+    public resultado suma(@RequestParam(name = "op1", required = false, defaultValue = "") String op1,
+                          @RequestParam(name = "op2", required = false, defaultValue = "") String op2) {
 
         resultado exported = new resultado();
 
         try {
+            // Validar que no estén vacíos
+            if (op1.isEmpty() || op2.isEmpty()) {
+                exported.setEstado("Ambos campos son obligatorios");
+                return exported;
+            }
 
             float castop1 = Float.parseFloat(op1);
             float castop2 = Float.parseFloat(op2);
 
+            // Calcular la suma: op1 + op2
             float resultado_int = castop1 + castop2;
+
+            // Redondear a 1 decimal
+            resultado_int = Math.round(resultado_int * 10.0f) / 10.0f;
 
             exported.setResultado(resultado_int);
             exported.setEstado("ok");
-        } catch (NumberFormatException Ex) {
-            exported.setEstado("Error en un de los datos enviados ");
 
+        } catch (NumberFormatException Ex) {
+            exported.setEstado("Carácter invalido, debe ingresar un valor de tipo numérico");
         }
         return exported;
-
     }
 
 
@@ -303,26 +311,38 @@ public class controlador {
     @RequestMapping(value = "/areaCircle", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public resultado circle(@RequestParam(name = "radio", required = false, defaultValue = "0") String radio) {
         resultado area_circle = new resultado();
+        
         try {
-            int valor = Integer.parseInt(radio);
-
-            if (valor < 0) {
-                throw new ArithmeticException();
+            // Validar que no esté vacío
+            if (radio.isEmpty()) {
+                area_circle.setEstado("El campo de entrada debe contener un valor numérico");
+                return area_circle;
             }
 
-            float resultadoFloat =(float) (Math.PI*(valor * valor) );
+            // Convertir a float (soporta tanto enteros como decimales)
+            float valor = Float.parseFloat(radio);
+
+            // Validar que el radio sea positivo
+            if (valor <= 0) {
+                area_circle.setEstado("El radio debe ser un valor positivo");
+                return area_circle;
+            }
+
+            // Calcular el área: Área = Pi * r * r
+            float resultadoFloat = (float) (Math.PI * valor * valor);
+            
+            // Redondear a 1 decimal
+            resultadoFloat = Math.round(resultadoFloat * 10.0f) / 10.0f;
+            
             area_circle.setResultado(resultadoFloat);
             area_circle.setEstado("ok");
 
-        } catch (ArithmeticException negativoEx) {
-            area_circle.setEstado("El número es negativo");
         } catch (NumberFormatException ex) {
-            area_circle.setEstado("Error en uno de los datos enviados");
+            area_circle.setEstado("Carácter invalido, debe ingresar un valor de tipo numérico");
         }
 
         return area_circle;
     }
-
 }
 
 
