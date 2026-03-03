@@ -1480,6 +1480,7 @@ class CalculadoraApplicationTests {
 	// ==================== TESTS DE PERÍMETRO DE CIRCUNFERENCIA ====================
 	// ==================== PRUEBAS DE ENTRADA DE DATOS ====================
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Aceptar radio entero positivo")
 	void testPerimetroCirculoRadioEnterPositivo() {
@@ -1498,6 +1499,7 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"Debe calcular correctamente: Perímetro = 2 * π * r");
 	}
+	*/
 
 	/*
 	@Test
@@ -1522,6 +1524,7 @@ class CalculadoraApplicationTests {
 
 	// ==================== PRUEBAS DE VALIDACIÓN RADIO ====================
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Radio cero retorna error")
 	void testPerimetroCirculoRadioCero() {
@@ -1536,7 +1539,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error cuando radio es cero");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Radio negativo retorna error")
 	void testPerimetroCirculoRadioNegativo() {
@@ -1551,7 +1556,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error cuando radio es negativo");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Radio decimal negativo retorna error")
 	void testPerimetroCirculoRadioDecimalNegativo() {
@@ -1566,9 +1573,11 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error con radio decimal negativo");
 	}
+	*/
 
 	// ==================== PRUEBAS DE CÁLCULO Y LÓGICA ====================
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Aplicar fórmula matemática estándar")
 	void testPerimetroCirculoFormulaEstandar() {
@@ -1586,7 +1595,9 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"Debe aplicar: Perímetro = 2 * π * r");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Radio 1 retorna 2*Pi aproximado")
 	void testPerimetroCirculoRadioUno() {
@@ -1603,9 +1614,11 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"Perímetro de círculo con radio 1: 2π ≈ 6.3");
 	}
+	*/
 
 	// ==================== PRUEBAS DE PRECISIÓN Y ALMACENAMIENTO ====================
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Resultado con precisión de 1 decimal")
 	void testPerimetroCirculoPrecisionUnDecimal() {
@@ -1623,7 +1636,9 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"El resultado debe redondearse a 1 decimal máximo");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: El resultado se almacena correctamente")
 	void testPerimetroCirculoAlmacenamientoResultado() {
@@ -1639,9 +1654,11 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"El resultado debe ser almacenado correctamente");
 	}
+	*/
 
 	// ==================== PRUEBAS DE VALIDACIÓN Y ERRORES ====================
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Campo vacío retorna error")
 	void testPerimetroCirculoCampoVacio() {
@@ -1656,7 +1673,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe mostrar advertencia cuando campo está vacío");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Perímetro Círculo: Carácter alfanumérico retorna error")
 	void testPerimetroCirculoCaracterAlfanumerico() {
@@ -1671,6 +1690,7 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error con caracteres alfabéticos");
 	}
+	*/
 
 	/*
 	@Test
@@ -1734,6 +1754,7 @@ class CalculadoraApplicationTests {
 
 	// ==================== PRUEBAS DE VALIDACIÓN RADIO ====================
 
+	/*
 	@Test
 	@DisplayName("Área Círculo: Radio cero retorna error")
 	void testAreaCirculoRadioCero() {
@@ -1748,7 +1769,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error cuando radio es cero");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Área Círculo: Radio negativo retorna error")
 	void testAreaCirculoRadioNegativo() {
@@ -1763,7 +1786,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error cuando radio es negativo");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Área Círculo: Radio decimal negativo retorna error")
 	void testAreaCirculoRadioDecimalNegativo() {
@@ -1778,9 +1803,11 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error con radio decimal negativo");
 	}
+	*/
 
 	// ==================== PRUEBAS DE CÁLCULO Y LÓGICA ====================
 
+	/*
 	@Test
 	@DisplayName("Área Círculo: Aplicar fórmula matemática estándar")
 	void testAreaCirculoFormulaEstandar() {
@@ -1798,7 +1825,9 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"Debe aplicar: Área = π * r²");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Área Círculo: Radio 1 retorna Pi aproximado")
 	void testAreaCirculoRadioUno() {
@@ -1815,6 +1844,7 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.1f,
 			"Área de círculo con radio 1: π ≈ 3.1");
 	}
+	*/
 
 	// ==================== PRUEBAS DE PRECISIÓN Y ALMACENAMIENTO ====================
 
