@@ -1,3 +1,4 @@
+#Configuración del entorno (pool) y variables
 trigger: none
 
 pool:
@@ -8,6 +9,7 @@ variables:
   wrapperScript: 'gradlew'
   tasks: 'clean test jacocoTestReport build'
 
+#Paso 1. Compilación y pruebas con Gradle
 steps:
 - task: Gradle@3
   displayName: 'gradlew clean test jacocoTestReport build'
@@ -16,6 +18,7 @@ steps:
     tasks: '$(tasks)'
     jdkVersionOption: '17'
 
+#Paso 2. Preparación de SonarCloud
 - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
   displayName: 'Prepare analysis on SonarQube Cloud'
   inputs:
@@ -24,6 +27,7 @@ steps:
     projectKey: com.entrenamiento.Calculadora
     projectName: 'Calculadora'
 
+#Paso 3. Análisis de Código con SonarCloud
 - task: Gradle@3
   displayName: 'Execute sonarqube analysis'
   inputs:
@@ -31,6 +35,7 @@ steps:
     tasks: 'sonarqube'
     jdkVersionOption: '17'
 
+#Paso 4. Publicación de resultados de SonarCloud
 - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
   displayName: 'Publish Quality Gate Result'
 
@@ -42,6 +47,7 @@ steps:
     TargetFolder: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
 
+#Paso 5. Gestión de artefactos: Publicación de los archivos .jar generados
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
   inputs:
