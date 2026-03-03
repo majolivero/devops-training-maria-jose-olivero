@@ -23,6 +23,8 @@ steps:
     organization: quind
     projectKey: com.entrenamiento.Calculadora
     projectName: 'Calculadora'
+    extraProperties: |
+      sonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
 
 - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
   displayName: 'Publish Quality Gate Result'
