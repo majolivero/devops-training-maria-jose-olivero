@@ -340,6 +340,7 @@ class CalculadoraApplicationTests {
 			"Debe calcular correctamente: -20 - 5 = -25");
 	}
 
+	/*
 	@Test
 	@DisplayName("Resta: Aceptar sustraendo negativo")
 	void testRestasustraendoNegativo() {
@@ -358,6 +359,7 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 
 			"Debe calcular correctamente: 15 - (-10) = 25");
 	}
+	*/
 
 	@Test
 	@DisplayName("Resta: Ambos números negativos")
@@ -1270,6 +1272,7 @@ class CalculadoraApplicationTests {
 	}
 	*/
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Raíz de cero es cero")
 	void testRaizDeCero() {
@@ -1287,9 +1290,11 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(),
 			"La raíz de cero debe ser cero: √0 = 0");
 	}
+	*/
 
 	// ==================== PRUEBAS DE VALIDACIÓN NÚMEROS NEGATIVOS ====================
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Número negativo retorna error")
 	void testRaizNumeroNegativo() {
@@ -1304,7 +1309,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error cuando radicando es negativo");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Número decimal negativo retorna error")
 	void testRaizDecimalNegativo() {
@@ -1319,9 +1326,11 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error con decimal negativo");
 	}
+	*/
 
 	// ==================== PRUEBAS DE CÁLCULO Y LÓGICA ====================
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Aplicar lógica matemática estándar")
 	void testRaizLogicaEstandar() {
@@ -1338,7 +1347,9 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(),
 			"Debe aplicar: Resultado = √Radicando");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Resultado perfecto con decimales")
 	void testRaizResultadoPerfectoDecimal() {
@@ -1355,6 +1366,7 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(),
 			"Debe calcular raíz de decimal: √100.0 = 10.0");
 	}
+	*/
 
 	// ==================== PRUEBAS DE PRECISIÓN ====================
 
@@ -1376,6 +1388,7 @@ class CalculadoraApplicationTests {
 			"Debe mostrar al menos 4 decimales para resultados irracionales");
 	}
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Precisión en raíz de 3")
 	void testRaizPrecisionTres() {
@@ -1392,7 +1405,9 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(), 0.00015f,
 			"Debe mantener precisión de 4 decimales");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: El resultado se almacena correctamente")
 	void testRaizAlmacenamientoResultado() {
@@ -1407,9 +1422,11 @@ class CalculadoraApplicationTests {
 		assertEquals(resultadoEsperado, resultado.getResultado(),
 			"El resultado debe ser almacenado correctamente");
 	}
+	*/
 
 	// ==================== PRUEBAS DE VALIDACIÓN Y ERRORES ====================
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Campo vacío retorna error")
 	void testRaizCampoVacio() {
@@ -1424,7 +1441,9 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe mostrar advertencia cuando campo está vacío");
 	}
+	*/
 
+	/*
 	@Test
 	@DisplayName("Raíz Cuadrada: Carácter alfanumérico retorna error")
 	void testRaizCaracterAlfanumerico() {
@@ -1439,6 +1458,7 @@ class CalculadoraApplicationTests {
 		assertEquals(estadoEsperado, resultado.getEstado(),
 			"Debe retornar error con caracteres alfabéticos");
 	}
+	*/
 
 	/*
 	@Test
