@@ -1,22 +1,42 @@
 trigger: none
 
-resources:
-  repositories:
-  - repository: templates
-    name: template-pipeline
-    type: git
-    ref: feature/demo
+pool:
+  vmImage: 'ubuntu-latest'
+  demands: java
 
-parameters: 
-- name: app
-  type: string
-  displayName: App
-  default: deploy
-  values:
-  - deploy
-  - destroy
+variables:
+  wrapperScript: 'gradlew'
+  tasks: 'clean test build sonarqube'
 
-extends:
-  template: pipeline/main.yml@templates
-  parameters:
-    app: ${{ parameters.app }}
+steps:
+- task: Gradle@3
+  displayName: 'gradlew clean test build sonarqube'
+  inputs:
+    gradleWrapperFile: '$(wrapperScript)'
+    tasks: '$(tasks)'
+    jdkVersionOption: '17'
+
+- task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
+  displayName: 'Prepare analysis on SonarQube Cloud'
+  inputs:
+    SonarQube: SonarCloud
+    organization: quind
+    projectKey: com.entrenamiento.Calculadora
+    projectName: 'Calculadora'
+
+- task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
+  displayName: 'Publish Quality Gate Result'
+
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: '**/*.jar'
+    TargetFolder: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
