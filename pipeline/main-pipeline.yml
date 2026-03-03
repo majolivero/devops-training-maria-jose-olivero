@@ -6,7 +6,7 @@ pool:
 
 variables:
   wrapperScript: 'gradlew'
-  tasks: 'clean test build'
+  tasks: 'clean test jacocoTestReport build'
 
 steps:
 - task: Gradle@3
@@ -15,13 +15,6 @@ steps:
     gradleWrapperFile: '$(wrapperScript)'
     tasks: '$(tasks)'
     jdkVersionOption: '17'
-
-- task: PublishCodeCoverageResults@1
-  displayName: 'Publish Code Coverage'
-  inputs:
-    codeCoverageTool: JaCoCo
-    summaryFileLocation: '$(System.DefaultWorkingDirectory)/build/reports/jacoco/test/jacocoTestReport.xml'
-    reportDirectory: '$(System.DefaultWorkingDirectory)/build/reports/jacoco/test/html'
 
 - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
   displayName: 'Prepare analysis on SonarQube Cloud'
@@ -32,6 +25,7 @@ steps:
     projectName: 'Calculadora'
     extraProperties: |
       sonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
+      sonar.java.binaries=build/classes/java/main
 
 - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
   displayName: 'Publish Quality Gate Result'
