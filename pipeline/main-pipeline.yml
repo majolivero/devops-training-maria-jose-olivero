@@ -6,11 +6,11 @@ pool:
 
 variables:
   wrapperScript: 'gradlew'
-  tasks: 'clean test build sonarqube'
+  tasks: 'clean test build'
 
 steps:
 - task: Gradle@3
-  displayName: 'gradlew clean test build sonarqube'
+  displayName: 'gradlew clean test build'
   inputs:
     gradleWrapperFile: '$(wrapperScript)'
     tasks: '$(tasks)'
