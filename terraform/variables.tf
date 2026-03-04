@@ -1,30 +1,14 @@
 # Azure Credentials
-variable "subscription_id" {
-  type        = string
-  description = "Azure Subscription ID"
-}
-
-variable "client_id" {
-  type        = string
-  description = "Azure Client ID (App ID)"
-}
-
-variable "client_secret" {
-  type        = string
-  sensitive   = true
-  description = "Azure Client Secret"
-}
-
-variable "tenant_id" {
-  type        = string
-  description = "Azure Tenant ID"
-}
+# ====================
+# Las credenciales se cargan desde variables de entorno:
+# ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID
+# No definas credenciales aquí (INSEGURO)
 
 # Resource Group
 variable "resource_group_name" {
   type        = string
-  default     = "rg-calculadora-dev"
-  description = "Name of the resource group"
+  default     = "resource-group-maria-jose-olivero"
+  description = "Name of the existing resource group"
 }
 
 variable "location" {

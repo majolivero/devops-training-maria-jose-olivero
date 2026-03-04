@@ -1,15 +1,9 @@
-# Azure Credentials for Testing
-# IMPORTANT: Replace these with your actual Azure credentials
-# These are placeholder values - update with your real subscription details
+# Terraform Variables
+# IMPORTANTE: Las credenciales NO van aquí
 
-
-subscription_id = "00000000-0000-0000-0000-000000000000"  # Replace with your Subscription ID
-client_id       = "00000000-0000-0000-0000-000000000000"  # Replace with your Client ID
-client_secret   = "test-client-secret-placeholder"        # Replace with your Client Secret
-tenant_id       = "00000000-0000-0000-0000-000000000000"  # Replace with your Tenant ID
 
 # VM Configuration
-resource_group_name = "rg-calculadora-dev"
+resource_group_name = "resource-group-maria-jose-olivero"
 location            = "eastus"
 vnet_name           = "vnet-calculadora"
 subnet_name         = "subnet-calculadora"
@@ -19,4 +13,6 @@ nsg_name            = "nsg-calculadora"
 vm_name             = "vm-calculadora"
 vm_size             = "Standard_B2s"
 admin_username      = "azureuser"
-admin_password      = "TestPassword123!@#"  # Replace with a strong password
+admin_password      = "TestPassword123!@#"
+address_space       = ["10.0.0.0/16"]           #Rango total de direcciones IP que el Virtual Network puede usar. Tiene 65536 direcciones IP disponibles.
+subnet_address_prefix = ["10.0.1.0/24"]         #Es un sub-rango dentro del Virtual Network que asignas a una Subnet específica.

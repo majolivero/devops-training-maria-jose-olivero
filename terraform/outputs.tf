@@ -1,10 +1,10 @@
 output "resource_group_id" {
-  value       = azurerm_resource_group.rg.id
+  value       = data.azurerm_resource_group.rg.id       #Usar RG existente
   description = "ID of the resource group"
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.rg.name
+  value       = data.azurerm_resource_group.rg.name    #Usar RG existente
   description = "Name of the resource group"
 }
 

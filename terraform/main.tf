@@ -1,21 +1,21 @@
-# Resource Group
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
-  location = var.location
+# Data source para usar el Resource Group EXISTENTE
+# (No lo creamos, solo lo referenciamos)
+data "azurerm_resource_group" "rg" {
+  name = var.resource_group_name
 }
 
 # Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
   address_space       = var.address_space
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 # Subnet
 resource "azurerm_subnet" "subnet" {
   name                 = var.subnet_name
-  resource_group_name  = azurerm_resource_group.rg.name
+  resource_group_name  = data.azurerm_resource_group.rg.name        #Usamos un RG ya existente (mi RG)
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = var.subnet_address_prefix
 }
@@ -23,8 +23,8 @@ resource "azurerm_subnet" "subnet" {
 # Network Interface
 resource "azurerm_network_interface" "nic" {
   name                = var.nic_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location      #Network Interface usa la ubicación del RG existente
+  resource_group_name = data.azurerm_resource_group.rg.name          #Se usa el RG existente
 
   ip_configuration {
     name                          = "testConfiguration"
@@ -37,16 +37,16 @@ resource "azurerm_network_interface" "nic" {
 # Public IP Address
 resource "azurerm_public_ip" "public_ip" {
   name                = var.public_ip_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location     #Pasa lo mismo que en linea 26 y 27
+  resource_group_name = data.azurerm_resource_group.rg.name
   allocation_method   = "Static"
 }
 
 # Network Security Group
 resource "azurerm_network_security_group" "nsg" {
   name                = var.nsg_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location    #Pasa lo mismo que en linea 26 y 27
+  resource_group_name = data.azurerm_resource_group.rg.name
 
   security_rule {
     name                       = "AllowSSH"
@@ -94,8 +94,8 @@ resource "azurerm_subnet_network_security_group_association" "nsg_association" {
 # Virtual Machine
 resource "azurerm_linux_virtual_machine" "vm" {
   name                = var.vm_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location     #VM usa info del RG existente, porque la VM se va a crear aquí
+  resource_group_name = data.azurerm_resource_group.rg.name
   size                = var.vm_size
 
   disable_password_authentication = false
