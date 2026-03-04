@@ -13,6 +13,6 @@ nsg_name            = "nsg-calculadora"
 vm_name             = "vm-calculadora"
 vm_size             = "Standard_B2s"
 admin_username      = "azureuser"
-admin_password      = "TestPassword123!@#"
+public_key_path     = "~/.ssh/azure_vm.pub"
 address_space       = ["10.0.0.0/16"]           #Rango total de direcciones IP que el Virtual Network puede usar. Tiene 65536 direcciones IP disponibles.
 subnet_address_prefix = ["10.0.1.0/24"]         #Es un sub-rango dentro del Virtual Network que asignas a una Subnet específica.

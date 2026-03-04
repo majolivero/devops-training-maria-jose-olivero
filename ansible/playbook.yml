@@ -1,0 +1,190 @@
+---
+# Playbook de Ansible para desplegar la aplicación Calculadora en Azure VM
+# Instala Java, sube el JAR y ejecuta la aplicación
+
+- name: Desplegar aplicación Calculadora en VM Azure
+  hosts: calculadora_vm
+  gather_facts: yes
+  
+  tasks:
+    # ==========================================
+    # 1. Actualizar el sistema operativo
+    # ==========================================
+    - name: Actualizar índice de paquetes
+      apt:
+        update_cache: yes
+      become: yes
+      register: apt_update_result
+      
+    # ==========================================
+    # 2. Instalar Java (OpenJDK 17)
+    # ==========================================
+    - name: Instalar OpenJDK 17
+      apt:
+        name: openjdk-17-jdk
+        state: present
+      become: yes
+      register: java_install
+      
+    - name: Verificar instalación de Java
+      shell: java -version
+      register: java_version
+      changed_when: false
+      
+    - name: Mostrar versión de Java
+      debug:
+        msg: "{{ java_version.stderr_lines[0] }}"
+      when: java_version.stderr is defined
+      
+    # ==========================================
+    # 3. Crear directorio para la aplicación
+    # ==========================================
+    - name: Crear directorio de aplicación
+      file:
+        path: /opt/apps/{{ app_name }}
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      become: yes
+      
+    - name: Crear directorio de logs
+      file:
+        path: /var/log/apps/{{ app_name }}
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      become: yes
+      
+    # ==========================================
+    # 4. Copiar el JAR a la VM
+    # ==========================================
+    - name: Copiar JAR a la VM
+      copy:
+        src: "/home/adminquind/Descargas/calculator-java-gradle-{{ app_version }} (1).jar"
+        dest: "/opt/apps/{{ app_name }}/calculator-{{ app_version }}.jar"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      become: yes
+      register: jar_copy
+      
+    - name: Verificar que el JAR se copió correctamente
+      stat:
+        path: "/opt/apps/{{ app_name }}/calculator-{{ app_version }}.jar"
+      register: jar_file
+      failed_when: not jar_file.stat.exists
+      
+    - name: Mostrar tamaño del JAR
+      debug:
+        msg: "JAR copied successfully - Size: {{ jar_file.stat.size }} bytes"
+      
+    # ==========================================
+    # 5. Crear script para ejecutar la aplicación
+    # ==========================================
+    - name: Crear script de inicio de la aplicación
+      copy:
+        content: |
+          #!/bin/bash
+          # Script para ejecutar la aplicación Calculadora
+          
+          APP_HOME=/opt/apps/{{ app_name }}
+          JAR_FILE=$APP_HOME/calculator-{{ app_version }}.jar
+          LOG_FILE=/var/log/apps/{{ app_name }}/app.log
+          
+          echo "Iniciando Calculadora en puerto {{ app_port }}..."
+          
+          # Ejecutar el JAR en background con logs
+          nohup java -jar $JAR_FILE --server.port={{ app_port }} > $LOG_FILE 2>&1 &
+          
+          echo $! > $APP_HOME/app.pid
+          echo "Aplicación iniciada con PID: $(cat $APP_HOME/app.pid)"
+        dest: "/opt/apps/{{ app_name }}/start.sh"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+      become: yes
+      
+    # ==========================================
+    # 6. Ejecutar la aplicación
+    # ==========================================
+    - name: Iniciar la aplicación Calculadora
+      shell: /opt/apps/{{ app_name }}/start.sh
+      register: start_app
+      changed_when: true
+      
+    - name: Mostrar resultado de inicio
+      debug:
+        msg: "{{ start_app.stdout }}"
+      
+    # ==========================================
+    # 7. Esperar a que la aplicación inicie
+    # ==========================================
+    - name: Esperar a que la aplicación esté lista (60 segundos)
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ app_port }}"
+        delay: 5
+        timeout: 60
+        msg: "Esperando que la aplicación inicie en puerto {{ app_port }}..."
+      ignore_errors: yes
+      
+    # ==========================================
+    # 8. Verificar que la API funciona
+    # ==========================================
+    - name: Obtener información de la aplicación (health check)
+      uri:
+        url: "http://{{ ansible_host }}:{{ app_port }}/actuator/health"
+        method: GET
+        status_code: 200
+      register: health_check
+      retries: 5
+      delay: 2
+      until: health_check.status == 200
+      ignore_errors: yes
+      
+    - name: Mostrar estado de salud
+      debug:
+        msg: "Health Check Response: {{ health_check.json }}"
+      when: health_check.status == 200
+      
+    # ==========================================
+    # 9. Hacer llamadas de prueba a la API
+    # ==========================================
+    - name: Probar endpoint de versión
+      uri:
+        url: "http://{{ ansible_host }}:{{ app_port }}/api/calculadora/version"
+        method: GET
+      register: version_response
+      ignore_errors: yes
+      
+    - name: Mostrar versión de la API
+      debug:
+        msg: "Versión API: {{ version_response.json | default('No disponible') }}"
+      when: version_response.status == 200
+      
+    # ==========================================
+    # 10. Resumen final
+    # ==========================================
+    - name: Mostrar información de despliegue exitoso
+      debug:
+        msg: |
+          ================================================
+          ✅ DESPLIEGUE EXITOSO
+          ================================================
+          
+          Aplicación: {{ app_name }}
+          Versión: {{ app_version }}
+          Host: {{ ansible_host }}
+          Puerto: {{ app_port }}
+          PID: $(cat /opt/apps/{{ app_name }}/app.pid)
+          
+          URLs de prueba:
+          - Health: http://{{ ansible_host }}:{{ app_port }}/actuator/health
+          - API: http://{{ ansible_host }}:{{ app_port }}/api/calculadora/
+          
+          Logs: ssh azureuser@{{ ansible_host }}
+               tail -f /var/log/apps/{{ app_name }}/app.log
+          
+          ================================================

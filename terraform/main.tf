@@ -98,9 +98,13 @@ resource "azurerm_linux_virtual_machine" "vm" {
   resource_group_name = data.azurerm_resource_group.rg.name
   size                = var.vm_size
 
-  disable_password_authentication = false
+  disable_password_authentication = true
   admin_username                  = var.admin_username
-  admin_password                  = var.admin_password
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file(var.public_key_path)
+  }
 
   network_interface_ids = [
     azurerm_network_interface.nic.id,
