@@ -62,7 +62,7 @@
     # ==========================================
     - name: Copiar JAR a la VM
       copy:
-        src: "/home/adminquind/Descargas/calculator-java-gradle-{{ app_version }} (1).jar"
+        src: "/home/adminquind/Descargas/calculator-java-gradle-{{ app_version }} (2).jar"
         dest: "/opt/apps/{{ app_name }}/calculator-{{ app_version }}.jar"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"

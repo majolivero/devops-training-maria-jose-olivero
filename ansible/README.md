@@ -2,7 +2,7 @@
 
 ## Descripción
 Este playbook de Ansible automatiza:
-1. ✅ Instalación de Java (OpenJDK 11)
+1. ✅ Instalación de Java (OpenJDK 17)
 2. ✅ Copia del JAR a la VM
 3. ✅ Ejecución de la aplicación
 4. ✅ Verificación de que la API funciona
@@ -12,7 +12,7 @@ Este playbook de Ansible automatiza:
 - Ansible instalado en tu máquina local ✓
 - SSH acceso a la VM Azure ✓
 - VM con Python instalado ✓
-- JAR disponible en: `/home/adminquind/Descargas/calculator-java-gradle-0.0.1-SNAPSHOT (1).jar` ✓
+- JAR disponible en: `/home/adminquind/Descargas/calculator-java-gradle-0.0.1-SNAPSHOT (2).jar` ✓
 
 ## Estructura de Archivos
 ```
@@ -32,9 +32,8 @@ vm_azure ansible_host=20.168.76.60 ansible_user=azureuser ansible_password=TestP
 ```
 
 **Variables disponibles:**
-- `ansible_host`: IP de la VM (20.168.76.60)
+- `ansible_host`: IP de la VM (20.168.130.67)
 - `ansible_user`: Usuario SSH (azureuser)
-- `ansible_password`: Contraseña SSH (TestPassword123!@#)
 - `app_port`: Puerto de la aplicación (8080)
 
 ## Cómo Ejecutar el Playbook
