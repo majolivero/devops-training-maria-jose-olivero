@@ -260,3 +260,46 @@
 }
 2026-03-04 15:18:00,329 p=531844 u=adminquind n=ansible | PLAY RECAP ************************************************************************************************************************
 2026-03-04 15:18:00,330 p=531844 u=adminquind n=ansible | vm_azure                   : ok=17   changed=2    unreachable=0    failed=0    skipped=2    rescued=0    ignored=3   
+2026-03-05 08:11:19,806 p=633539 u=adminquind n=ansible | PLAY [Desplegar aplicación Calculadora en VM Azure] *******************************************************************************
+2026-03-05 08:11:19,811 p=633539 u=adminquind n=ansible | TASK [Gathering Facts] ************************************************************************************************************
+2026-03-05 08:11:49,858 p=633539 u=adminquind n=ansible | fatal: [vm_azure]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 20.118.130.67 port 22: Connection timed out", "unreachable": true}
+2026-03-05 08:11:49,860 p=633539 u=adminquind n=ansible | PLAY RECAP ************************************************************************************************************************
+2026-03-05 08:11:49,860 p=633539 u=adminquind n=ansible | vm_azure                   : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+2026-03-05 08:18:17,451 p=636931 u=adminquind n=ansible | PLAY [Desplegar aplicación Calculadora en VM Azure] ****************************
+2026-03-05 08:18:17,456 p=636931 u=adminquind n=ansible | TASK [Gathering Facts] *********************************************************
+2026-03-05 08:18:24,489 p=636931 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-05 08:18:24,498 p=636931 u=adminquind n=ansible | TASK [Actualizar índice de paquetes] *******************************************
+2026-03-05 08:18:41,903 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:18:41,908 p=636931 u=adminquind n=ansible | TASK [Instalar OpenJDK 17] *****************************************************
+2026-03-05 08:19:41,011 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:19:41,022 p=636931 u=adminquind n=ansible | TASK [Verificar instalación de Java] *******************************************
+2026-03-05 08:19:43,826 p=636931 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-05 08:19:43,837 p=636931 u=adminquind n=ansible | TASK [Mostrar versión de Java] *************************************************
+2026-03-05 08:19:43,863 p=636931 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "openjdk version \"17.0.15\" 2025-04-15"
+}
+2026-03-05 08:19:43,868 p=636931 u=adminquind n=ansible | TASK [Crear directorio de aplicación] ******************************************
+2026-03-05 08:19:46,429 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:19:46,439 p=636931 u=adminquind n=ansible | TASK [Crear directorio de logs] ************************************************
+2026-03-05 08:19:48,935 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:19:48,947 p=636931 u=adminquind n=ansible | TASK [Copiar JAR a la VM] ******************************************************
+2026-03-05 08:20:02,455 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:20:02,464 p=636931 u=adminquind n=ansible | TASK [Verificar que el JAR se copió correctamente] *****************************
+2026-03-05 08:20:05,044 p=636931 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-05 08:20:05,048 p=636931 u=adminquind n=ansible | TASK [Mostrar tamaño del JAR] **************************************************
+2026-03-05 08:20:05,069 p=636931 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "JAR copied successfully - Size: 17631177 bytes"
+}
+2026-03-05 08:20:05,074 p=636931 u=adminquind n=ansible | TASK [Crear script de inicio de la aplicación] *********************************
+2026-03-05 08:20:10,659 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:20:10,671 p=636931 u=adminquind n=ansible | TASK [Iniciar la aplicación Calculadora] ***************************************
+2026-03-05 08:20:13,212 p=636931 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-05 08:20:13,223 p=636931 u=adminquind n=ansible | TASK [Mostrar resultado de inicio] *********************************************
+2026-03-05 08:20:13,237 p=636931 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "Iniciando Calculadora en puerto 8080...\nAplicación iniciada con PID: 6215"
+}
+2026-03-05 08:20:13,243 p=636931 u=adminquind n=ansible | TASK [Esperar a que la aplicación esté lista (60 segundos)] ********************
+2026-03-05 08:20:20,881 p=636931 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-05 08:20:20,891 p=636931 u=adminquind n=ansible | TASK [Obtener información de la aplicación (health check)] *********************
+2026-03-05 08:20:47,640 p=636931 u=adminquind n=ansible |  [ERROR]: User interrupted execution
+
