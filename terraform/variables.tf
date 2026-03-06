@@ -88,3 +88,14 @@ variable "public_key_path" {
   default     = "~/.ssh/azure_vm.pub"
   description = "Path to the public SSH key file"
 }
+
+# ACR & AKS Variables
+variable "acr_name" {
+  type    = string
+  default = "acrmajolivero1772830059" # Debe ser único globalmente
+}
+
+variable "aks_cluster_name" {
+  type    = string
+  default = "aks-calculadora-majo"
+}

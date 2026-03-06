@@ -6,6 +6,13 @@ terraform {
     }
   }
   required_version = ">= 1.0"      #version de Terraform
+
+  backend "azurerm" {
+    resource_group_name  = "resource-group-maria-jose-olivero"
+    storage_account_name = "stmajo1772830059"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+  }
 }
 
 #Las credenciales se cargan automaticamente desde el CLI, Terraform encuentra los tokens en  ~/.azure/
