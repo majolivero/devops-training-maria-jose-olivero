@@ -355,3 +355,55 @@
 }
 2026-03-06 10:30:19,753 p=878853 u=adminquind n=ansible | PLAY RECAP ************************************************************************************************************************
 2026-03-06 10:30:19,753 p=878853 u=adminquind n=ansible | vm_azure                   : ok=17   changed=7    unreachable=0    failed=0    skipped=2    rescued=0    ignored=3   
+2026-03-06 11:00:18,241 p=889342 u=adminquind n=ansible | ERROR! the playbook: ansible/playbook.yml could not be found
+2026-03-06 11:00:57,517 p=889560 u=adminquind n=ansible | PLAY [Desplegar aplicación Calculadora en VM Azure] *******************************************************************************
+2026-03-06 11:00:57,522 p=889560 u=adminquind n=ansible | TASK [Gathering Facts] ************************************************************************************************************
+2026-03-06 11:01:03,099 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:03,113 p=889560 u=adminquind n=ansible | TASK [Actualizar índice de paquetes] **********************************************************************************************
+2026-03-06 11:01:07,074 p=889560 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-06 11:01:07,085 p=889560 u=adminquind n=ansible | TASK [Instalar OpenJDK 17] ********************************************************************************************************
+2026-03-06 11:01:10,428 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:10,434 p=889560 u=adminquind n=ansible | TASK [Verificar instalación de Java] **********************************************************************************************
+2026-03-06 11:01:13,187 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:13,191 p=889560 u=adminquind n=ansible | TASK [Mostrar versión de Java] ****************************************************************************************************
+2026-03-06 11:01:13,212 p=889560 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "openjdk version \"17.0.15\" 2025-04-15"
+}
+2026-03-06 11:01:13,216 p=889560 u=adminquind n=ansible | TASK [Crear directorio de aplicación] *********************************************************************************************
+2026-03-06 11:01:15,725 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:15,730 p=889560 u=adminquind n=ansible | TASK [Crear directorio de logs] ***************************************************************************************************
+2026-03-06 11:01:18,182 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:18,186 p=889560 u=adminquind n=ansible | TASK [Copiar JAR a la VM] *********************************************************************************************************
+2026-03-06 11:01:27,802 p=889560 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-06 11:01:27,806 p=889560 u=adminquind n=ansible | TASK [Verificar que el JAR se copió correctamente] ********************************************************************************
+2026-03-06 11:01:30,288 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:30,292 p=889560 u=adminquind n=ansible | TASK [Mostrar tamaño del JAR] *****************************************************************************************************
+2026-03-06 11:01:30,309 p=889560 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "JAR copied successfully - Size: 17631177 bytes"
+}
+2026-03-06 11:01:30,314 p=889560 u=adminquind n=ansible | TASK [Crear script de inicio de la aplicación] ************************************************************************************
+2026-03-06 11:01:34,647 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:34,652 p=889560 u=adminquind n=ansible | TASK [Iniciar la aplicación Calculadora] ******************************************************************************************
+2026-03-06 11:01:37,132 p=889560 u=adminquind n=ansible | changed: [vm_azure]
+2026-03-06 11:01:37,137 p=889560 u=adminquind n=ansible | TASK [Mostrar resultado de inicio] ************************************************************************************************
+2026-03-06 11:01:37,151 p=889560 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "Iniciando Calculadora en puerto 8080...\nAplicación iniciada con PID: 7366"
+}
+2026-03-06 11:01:37,155 p=889560 u=adminquind n=ansible | TASK [Esperar a que la aplicación esté lista (60 segundos)] ***********************************************************************
+2026-03-06 11:01:44,807 p=889560 u=adminquind n=ansible | ok: [vm_azure]
+2026-03-06 11:01:44,817 p=889560 u=adminquind n=ansible | TASK [Obtener información de la aplicación (health check)] ************************************************************************
+2026-03-06 11:02:11,331 p=889560 u=adminquind n=ansible | fatal: [vm_azure]: FAILED! => {"attempts": 5, "changed": false, "connection": "close", "content_type": "application/json", "date": "Fri, 06 Mar 2026 16:02:11 GMT", "elapsed": 0, "json": {"error": "Not Found", "path": "/actuator/health", "status": 404, "timestamp": "2026-03-06T16:02:11.021+00:00"}, "msg": "Status code was 404 and not [200]: HTTP Error 404: ", "redirected": false, "status": 404, "transfer_encoding": "chunked", "url": "http://172.182.232.165:8080/actuator/health", "vary": "Access-Control-Request-Headers"}
+2026-03-06 11:02:11,332 p=889560 u=adminquind n=ansible | ...ignoring
+2026-03-06 11:02:11,343 p=889560 u=adminquind n=ansible | TASK [Mostrar estado de salud] ****************************************************************************************************
+2026-03-06 11:02:11,356 p=889560 u=adminquind n=ansible | skipping: [vm_azure]
+2026-03-06 11:02:11,361 p=889560 u=adminquind n=ansible | TASK [Probar endpoint de versión] *************************************************************************************************
+2026-03-06 11:02:13,961 p=889560 u=adminquind n=ansible | fatal: [vm_azure]: FAILED! => {"changed": false, "connection": "close", "content_type": "application/json", "date": "Fri, 06 Mar 2026 16:02:13 GMT", "elapsed": 0, "json": {"error": "Not Found", "path": "/api/calculadora/version", "status": 404, "timestamp": "2026-03-06T16:02:13.657+00:00"}, "msg": "Status code was 404 and not [200]: HTTP Error 404: ", "redirected": false, "status": 404, "transfer_encoding": "chunked", "url": "http://172.182.232.165:8080/api/calculadora/version", "vary": "Access-Control-Request-Headers"}
+2026-03-06 11:02:13,961 p=889560 u=adminquind n=ansible | ...ignoring
+2026-03-06 11:02:13,967 p=889560 u=adminquind n=ansible | TASK [Mostrar versión de la API] **************************************************************************************************
+2026-03-06 11:02:13,978 p=889560 u=adminquind n=ansible | skipping: [vm_azure]
+2026-03-06 11:02:13,983 p=889560 u=adminquind n=ansible | TASK [Mostrar información de despliegue exitoso] **********************************************************************************
+2026-03-06 11:02:13,994 p=889560 u=adminquind n=ansible | ok: [vm_azure] => {
+    "msg": "================================================\n✅ DESPLIEGUE EXITOSO\n================================================\n\nAplicación: calculadora\nVersión: 0.0.1-SNAPSHOT\nHost: 172.182.232.165\nPuerto: 8080\nPID: $(cat /opt/apps/calculadora/app.pid)\n\nURLs de prueba:\n- Health: http://172.182.232.165:8080/actuator/health\n- API: http://172.182.232.165:8080/api/calculadora/\n\nLogs: ssh azureuser@172.182.232.165\n     tail -f /var/log/apps/calculadora/app.log\n\n================================================\n"
+}
+2026-03-06 11:02:14,012 p=889560 u=adminquind n=ansible | PLAY RECAP ************************************************************************************************************************
+2026-03-06 11:02:14,012 p=889560 u=adminquind n=ansible | vm_azure                   : ok=17   changed=3    unreachable=0    failed=0    skipped=2    rescued=0    ignored=2   
