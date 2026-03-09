@@ -1,13 +1,26 @@
+#Parte 1. Deployment ("El despliegue de la aplicación en Kubernetes")
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: calculadora-back
-  namespace: calculadora-ns
+  name: calculadora-back   # Nombre único para identificar este despliegue
+  namespace: calculadora-ns # El "barrio" o espacio de trabajo donde vivirá este despliegue
 spec:
-  replicas: 1
+  replicas: 1 # Cuántas copias (Pods) de tu app quieres encendidas
   selector:
     matchLabels:
-      app: calculadora-app
+      app: calculadora-app   # Etiqueta para que el Service encuentre estos Pods
+  template:
+    metadata:
+      labels:
+        app: calculadora-app   # Etiqueta que identifica a los Pods de este despliegue
+    spec:
+      containers:
+      - name: calculadora-container  # Nombre del contenedor dentro del Pod
+        image: acrmajolivero1772830059.azurecr.io/calculadora-back:v1  # Imagen Docker de tu app
+        ports:
+        - containerPort: 8080  # Puerto donde tu app escucha dentro del contenedor
+      imagePullSecrets:
+      - name: acr-secret  # Referencia al secreto para acceder al ACR privado
   template:
     metadata:
       labels:
@@ -21,15 +34,16 @@ spec:
       imagePullSecrets:
       - name: acr-secret
 ---
+#Parte 2. Service ("Exponer la aplicación para que sea accesible desde fuera del clúster")
 apiVersion: v1
 kind: Service
 metadata:
   name: calculadora-service
   namespace: calculadora-ns
 spec:
-  type: LoadBalancer
+  type: LoadBalancer # ¡ESTO ES CLAVE! Azure creará una IP PÚBLICA real para este servicio
   ports:
-  - port: 80
-    targetPort: 8080
+  - port: 80    # El puerto por el que entran los usuarios (Navegador)
+    targetPort: 8080   # A qué puerto del contenedor debe enviarse el tráfico
   selector:
-    app: calculadora-app
+    app: calculadora-app  # Conecta este Service con los Pods del Deployment
