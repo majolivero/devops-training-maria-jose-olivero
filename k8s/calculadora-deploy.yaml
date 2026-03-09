@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculadora-back
+  namespace: calculadora-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculadora-app
+  template:
+    metadata:
+      labels:
+        app: calculadora-app
+    spec:
+      containers:
+      - name: calculadora-container
+        image: acrmajolivero1772830059.azurecr.io/calculadora-back:v1
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+      - name: acr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: calculadora-service
+  namespace: calculadora-ns
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: calculadora-app
