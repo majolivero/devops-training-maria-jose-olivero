@@ -9,7 +9,7 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "resource-group-maria-jose-olivero"
-    storage_account_name = "stmajo1773058663"
+    storage_account_name = "stmajo1773169612"
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
   }

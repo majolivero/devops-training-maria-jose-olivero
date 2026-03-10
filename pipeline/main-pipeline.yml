@@ -53,3 +53,32 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
+
+# Automatización de Infraestructura y Contenedores
+# Se utiliza un script de Bash en lugar de una tarea de Terraform específica
+# debido a restricciones de permisos para crear un Service Connection clásico.
+- script: |
+    cd terraform
+    # Inicializa Terraform usando el backend configurado en provider.tf
+    terraform init -input=false
+    # Aplica los cambios de infraestructura de forma automática
+    terraform apply -auto-approve -input=false
+  displayName: 'Terraform: Init & Apply'
+  env:
+    # Variables de entorno para la autenticación de Terraform con Azure
+    ARM_SUBSCRIPTION_ID: $(subscription_id)
+    ARM_TENANT_ID: $(tenant_id)
+
+# Construcción de imagen Docker y subida al Azure Container Registry (ACR)
+# Se utiliza 'az acr login' para autenticar directamente con los permisos del agente.
+- script: |
+    # Inicia sesión en el registro privado de Azure
+    az acr login --name acrmajolivero1772830059
+    # Construye la imagen usando el Dockerfile de la raíz
+    docker build -t acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) .
+    # Sube la imagen con el tag del BuildId actual
+    docker push acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)
+    # Etiqueta y sube también como 'latest' para facilitar despliegues
+    docker tag acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) acrmajolivero1772830059.azurecr.io/calculadora:latest
+    docker push acrmajolivero1772830059.azurecr.io/calculadora:latest
+  displayName: 'Docker: Build and Push to ACR'
