@@ -55,8 +55,12 @@ steps:
   condition: succeededOrFailed()
 
 # Automatización de Infraestructura y Contenedores
-# Se utiliza un script de Bash en lugar de una tarea de Terraform específica
-# debido a restricciones de permisos para crear un Service Connection clásico.
+# Se instala Terraform explícitamente para evitar el error 127
+- task: TerraformInstaller@1
+  displayName: 'Instalar Terraform'
+  inputs:
+    terraformVersion: 'latest'
+
 - script: |
     cd terraform
     # Inicializa Terraform usando el backend configurado en provider.tf
