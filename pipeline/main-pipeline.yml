@@ -68,44 +68,23 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      #1.Preparar el entorno:Generar llave SSH para la VM (evita el error de archivo no encontrado)
+      # 1. Preparar el entorno (Llave SSH para la VM)
       mkdir -p ~/.ssh
       ssh-keygen -t rsa -b 4096 -f ~/.ssh/azure_vm -N ""
       
       cd terraform
-
-      #2.Inyectamos las credenciales del Service Principal de la conexión en variables que Terraform reconoce
-      #Estas variables deben estar creadas en la sección 'Variables' del Pipeline
-      #Terraform las usará automáticamente para autenticarse con Azure y gestionar los recursos. Las reconoce por el prefijo ARM_ y el nombre específico que espera.
+      
+      # 2. Inyectar credenciales del Service Principal
       export ARM_CLIENT_ID=$servicePrincipalId
       export ARM_CLIENT_SECRET=$servicePrincipalKey
       export ARM_TENANT_ID=$tenantId
       export ARM_SUBSCRIPTION_ID=$(subscription_id)
       
-      echo "Iniciando Terraform Init..."
-
-      # 3. Inicializar (La Memoria)
-      # Conecta con el Storage Account y descarga los "providers" (plugins) necesarios.
+      echo "Iniciando Terraform..."
+      # 3. Inicializar (Limpio, sin memoria previa)
       terraform init -input=false
       
-      echo "Importando recursos existentes para evitar errores de duplicado..."
-
-      # 4. Sincronizar (Los Imports)
-      # Los "|| true" evitan que el pipeline falle si el recurso NO existe.
-      # Si existe, lo trae a la memoria (tfstate) para no duplicarlo.
-      terraform import azurerm_virtual_network.vnet ... || true
-      # Importamos los recursos que el log indicó que ya existen
-      terraform import azurerm_virtual_network.vnet /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora || true
-      terraform import azurerm_subnet.subnet /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora/subnets/subnet-calculadora || true
-      terraform import azurerm_public_ip.public_ip /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/publicIPAddresses/pip-calculadora || true
-      terraform import azurerm_network_security_group.nsg /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkSecurityGroups/nsg-calculadora || true
-      terraform import azurerm_network_interface.nic /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkInterfaces/nic-calculadora || true
-      terraform import azurerm_subnet_network_security_group_association.nsg_association /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora/subnets/subnet-calculadora || true
-      
-      echo "Iniciando Terraform Apply..."
-
-      # 5. Ejecutar (La Construcción)
-      # "-auto-approve" es vital: el pipeline no puede dar clic en "yes".
+      # 4. Crear infraestructura desde cero (Sin 'import')
       terraform apply -auto-approve -input=false
     addSpnToEnvironment: true
   env:
