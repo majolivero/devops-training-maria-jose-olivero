@@ -85,8 +85,10 @@ steps:
       echo "Importando recursos existentes para evitar errores de duplicado..."
       # Importamos los recursos que el log indicó que ya existen
       terraform import azurerm_virtual_network.vnet /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora || true
+      terraform import azurerm_subnet.subnet /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora/subnets/subnet-calculadora || true
       terraform import azurerm_public_ip.public_ip /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/publicIPAddresses/pip-calculadora || true
       terraform import azurerm_network_security_group.nsg /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkSecurityGroups/nsg-calculadora || true
+      terraform import azurerm_network_interface.nic /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkInterfaces/nic-calculadora || true
       
       echo "Iniciando Terraform Apply..."
       terraform apply -auto-approve -input=false
