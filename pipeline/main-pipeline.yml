@@ -68,6 +68,10 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
+      # Generar llave SSH para la VM (evita el error de archivo no encontrado)
+      mkdir -p ~/.ssh
+      ssh-keygen -t rsa -b 4096 -f ~/.ssh/azure_vm -N ""
+      
       cd terraform
       # Inyectamos las credenciales del Service Principal de la conexión en variables que Terraform reconoce
       export ARM_CLIENT_ID=$servicePrincipalId
