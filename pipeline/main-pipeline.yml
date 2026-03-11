@@ -64,7 +64,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Terraform: Init & Apply'
   inputs:
-    azureSubscription: 'sc-majo-terraform'
+    azureSubscription: 'sc-majo-terraform-v2'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
@@ -81,7 +81,7 @@ steps:
 - task: AzureCLI@2
   displayName: 'Docker: Build and Push to ACR'
   inputs:
-    azureSubscription: 'sc-majo-terraform'
+    azureSubscription: 'sc-majo-terraform-v2'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
