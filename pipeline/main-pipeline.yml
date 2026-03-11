@@ -69,13 +69,21 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       cd terraform
+      # Inyectamos las credenciales del Service Principal de la conexión en variables que Terraform reconoce
+      export ARM_CLIENT_ID=$servicePrincipalId
+      export ARM_CLIENT_SECRET=$servicePrincipalKey
+      export ARM_TENANT_ID=$tenantId
+      export ARM_SUBSCRIPTION_ID=$(subscription_id)
+      
+      echo "Iniciando Terraform Init..."
       terraform init -input=false
+      
+      echo "Iniciando Terraform Apply..."
       terraform apply -auto-approve -input=false
     addSpnToEnvironment: true
   env:
-    ARM_SUBSCRIPTION_ID: $(subscription_id)
-    ARM_TENANT_ID: $(tenant_id)
-    ARM_USE_MSI: true # Intentará usar la identidad de la conexión
+    # Estas variables deben estar creadas en la sección 'Variables' del Pipeline
+    subscription_id: $(subscription_id)
 
 # Construcción de imagen Docker y subida al Azure Container Registry (ACR)
 - task: AzureCLI@2
