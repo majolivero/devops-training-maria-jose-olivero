@@ -89,6 +89,7 @@ steps:
       terraform import azurerm_public_ip.public_ip /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/publicIPAddresses/pip-calculadora || true
       terraform import azurerm_network_security_group.nsg /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkSecurityGroups/nsg-calculadora || true
       terraform import azurerm_network_interface.nic /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/networkInterfaces/nic-calculadora || true
+      terraform import azurerm_subnet_network_security_group_association.nsg_association /subscriptions/$(subscription_id)/resourceGroups/resource-group-maria-jose-olivero/providers/Microsoft.Network/virtualNetworks/vnet-calculadora/subnets/subnet-calculadora || true
       
       echo "Iniciando Terraform Apply..."
       terraform apply -auto-approve -input=false
