@@ -83,6 +83,11 @@ variable "admin_username" {
   description = "Admin username for the VM"
 }
 
+variable "ssh_public_key" {
+  type        = string
+  description = "Public SSH key content"
+}
+
 variable "public_key_path" {
   type        = string
   default     = "~/.ssh/azure_vm.pub"
