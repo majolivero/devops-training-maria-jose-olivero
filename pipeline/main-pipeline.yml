@@ -68,7 +68,13 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      # 1. Preparar el entorno (Llave SSH para la VM)
+      # 1. Automatizar la creación del Storage Account y Contenedor para el Estado
+      # Si ya existen, el comando no hará nada (Idempotencia).
+      echo "Asegurando existencia del Storage Account para el Estado..."
+      az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
+      az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
+
+      # 2. Preparar el entorno (Llave SSH para la VM)
       mkdir -p ~/.ssh
       ssh-keygen -t rsa -b 4096 -f ~/.ssh/azure_vm -N ""
       
