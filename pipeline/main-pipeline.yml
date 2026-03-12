@@ -90,7 +90,8 @@ steps:
       terraform apply -auto-approve -input=false -var="ssh_public_key=$(SSH_PUBLIC_KEY)"
     addSpnToEnvironment: true
   env:
-    # Estas variables deben estar creadas en la sección 'Variables' del Pipeline
+    # Mapeamos la variable secreta para que el script de bash la pueda ver
+    SSH_PUBLIC_KEY: $(SSH_PUBLIC_KEY)
     subscription_id: $(subscription_id)
 
 # Construcción de imagen Docker y subida al Azure Container Registry (ACR)
