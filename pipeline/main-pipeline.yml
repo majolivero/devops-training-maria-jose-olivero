@@ -120,3 +120,26 @@ steps:
       # Envía la imagen desde el agente de build hacia tu ACR en la nube de Azure.
       docker push acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)
       docker push acrmajolivero1772830059.azurecr.io/calculadora:latest
+
+# Despliegue en AKS usando la imagen recién construida
+- task: AzureCLI@2
+  displayName: 'AKS: Deploy Application'
+  inputs:
+    azureSubscription: 'sc-majo-terraform-v2'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # 1. Obtener credenciales del clúster AKS (Kubeconfig)
+      # Esto configura kubectl para hablar con tu clúster
+      az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
+
+      # 2. Reemplazar la imagen en el manifiesto con la versión actual (Build.BuildId)
+      # Esto asegura que despliegas exactamente lo que acabas de compilar
+      sed -i "s|image: acrmajolivero1772830059.azurecr.io/calculadora:latest|image: acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)|g" k8s/calculadora-deploy.yaml
+
+      # 3. Aplicar los manifiestos
+      # -f k8s/ aplica tanto el Deployment como el Service
+      kubectl apply -f k8s/calculadora-deploy.yaml
+
+      # 4. Verificar el despliegue
+      kubectl rollout status deployment/calculadora-back -n calculadora-ns

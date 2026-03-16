@@ -16,27 +16,15 @@ spec:
     spec:
       containers:
       - name: calculadora-container  # Nombre del contenedor dentro del Pod
-        image: acrmajolivero1772830059.azurecr.io/calculadora-back:v1  # Imagen Docker de tu app
+        image: acrmajolivero1772830059.azurecr.io/calculadora:latest  # Se actualizará en el pipeline
         ports:
         - containerPort: 8080  # Puerto donde tu app escucha dentro del contenedor
       imagePullSecrets:
       - name: acr-secret  # Referencia al secreto para acceder al ACR privado
-  template:
-    metadata:
-      labels:
-        app: calculadora-app
-    spec:
-      containers:
-      - name: calculadora-container
-        image: acrmajolivero1772830059.azurecr.io/calculadora-back:v1
-        ports:
-        - containerPort: 8080
-      imagePullSecrets:
-      - name: acr-secret
 ---
 #Parte 2. Service ("Exponer la aplicación para que sea accesible desde fuera del clúster")
 apiVersion: v1
-kind: Service
+kind: Service      #(1) Tipo de recurso que define cómo exponer tu aplicación al mundo exterior
 metadata:
   name: calculadora-service
   namespace: calculadora-ns
