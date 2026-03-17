@@ -14,6 +14,6 @@ public class VersionController {
     @GetMapping(produces = "application/json; charset=UTF-8")
     @ResponseBody
     public ResponseEntity<String> version() {
-        return new ResponseEntity<>("calculator-java-gradle V#{Build.BuildNumber}#", HttpStatus.OK);
+        return new ResponseEntity<>("Calculator OK - Actualizada por Majo - Build: " + System.getenv("BUILD_ID"), HttpStatus.OK);
     }
 }

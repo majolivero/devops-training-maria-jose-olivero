@@ -7,6 +7,10 @@ WORKDIR /app
 # Copiar el JAR compilado
 COPY app.jar calculadora.jar
 
+# Recibir el BuildId desde el pipeline para mostrarlo en la app
+ARG BUILD_ID
+ENV BUILD_ID=$BUILD_ID
+
 # Exponer puerto (mismo que en application.properties)
 EXPOSE 8080
 

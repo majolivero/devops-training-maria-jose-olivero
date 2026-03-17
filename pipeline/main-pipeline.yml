@@ -109,7 +109,7 @@ steps:
       # 2. Build (Empaquetado)
       # Toma el código de la calculadora y crea una imagen. 
       # "$(Build.BuildId)" es un número único (ej: 450) para rastrear cada versión.
-      docker build -t acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) .
+      docker build --build-arg BUILD_ID=$(Build.BuildId) -t acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) .
 
       # 3. Tag (Etiquetado)
       # Marcamos la misma imagen como "latest" (la más reciente). 
