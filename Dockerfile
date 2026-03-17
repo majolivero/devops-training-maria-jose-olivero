@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copiar el JAR compilado
-COPY app.jar calculadora.jar
+COPY build/libs/calculator-java-gradle-0.0.1-SNAPSHOT.jar calculadora.jar
 
 # Recibir el BuildId desde el pipeline para mostrarlo en la app
 ARG BUILD_ID
