@@ -157,5 +157,8 @@ steps:
       # -f k8s/ aplica tanto el Deployment como el Service
       kubectl apply -f k8s/calculadora-deploy.yaml
 
-      # 6. Verificar el despliegue
+      # 6. Forzar reinicio para asegurar que baje la nueva imagen
+      kubectl rollout restart deployment/calculadora-back -n calculadora-ns
+
+      # 7. Verificar el despliegue
       kubectl rollout status deployment/calculadora-back -n calculadora-ns
