@@ -28,8 +28,11 @@ kind: Service      #(1) Tipo de recurso que define cómo exponer tu aplicación 
 metadata:
   name: calculadora-service
   namespace: calculadora-ns
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: resource-group-maria-jose-olivero
 spec:
   type: LoadBalancer # ¡ESTO ES CLAVE! Azure creará una IP PÚBLICA real para este servicio
+  loadBalancerIP: 20.25.128.34 # IP pública fija (opcional, pero recomendado para producción)
   ports:
   - port: 80    # El puerto por el que entran los usuarios (Navegador)
     targetPort: 8080   # A qué puerto del contenedor debe enviarse el tráfico
