@@ -9,8 +9,24 @@ variables:
   wrapperScript: 'gradlew'
   tasks: 'clean test jacocoTestReport build'
 
-#Paso 1. Compilación y pruebas con Gradle
+# Infraestructura básica: Storage Account, tfstate y AKS
 steps:
+- task: AzureCLI@2
+  displayName: 'Infra: Crear Storage Account, tfstate y AKS'
+  inputs:
+    azureSubscription: 'sc-majo-terraform-v2'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
+      az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
+      az aks create \
+        --resource-group resource-group-maria-jose-olivero \
+        --name aks-calculadora-majo \
+        --node-count 1 \
+        --enable-managed-identity \
+        --generate-ssh-keys || echo "AKS ya existe"
+#Paso 1. Compilación y pruebas con Gradle
 - task: Gradle@3
   displayName: 'gradlew clean test jacocoTestReport build'
   inputs:
