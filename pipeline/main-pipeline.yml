@@ -21,7 +21,7 @@ stages:
   displayName: 'Etapa: Construcción y Análisis Sonar'
   jobs:
   - job: BuildAndSonarJob
-    displayName: 'Trabajo: Compilar y Analizar'
+    displayName: 'Compilar y Analizar'
     # Pasos (Steps) que se ejecutan en este trabajo
     steps:
     
@@ -90,7 +90,7 @@ stages:
   condition: succeeded()
   jobs:
   - job: TerraformAndDeployJob
-    displayName: 'Trabajo: Terraform y Kubernetes'
+    displayName: 'Terraform y Kubernetes'
     steps:
     
     # Tarea: Descargar el .jar de la etapa anterior
