@@ -86,6 +86,13 @@ stages:
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
 
+    # Preparar la estructura de carpetas para el Dockerfile
+    - script: |
+        mkdir -p build/libs
+        cp $(System.ArtifactsDirectory)/drop/**/*.jar build/libs/
+        ls -R build/libs/
+      displayName: 'Restaurar estructura de carpetas para Docker'
+
     # Automatización de Infraestructura y Contenedores
     - task: TerraformInstaller@1
       displayName: 'Instalar Terraform'
