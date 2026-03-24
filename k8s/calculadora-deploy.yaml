@@ -23,15 +23,30 @@ spec:
       - name: acr-secret  # Referencia al secreto para acceder al ACR privado
 ---
 #Parte 2. Service ("Exponer la aplicación para que sea accesible desde fuera del clúster")
+# apiVersion: v1
+# kind: Service      #(1) Tipo de recurso que define cómo exponer tu aplicación al mundo exterior
+# metadata:
+#   name: calculadora-service
+#   namespace: calculadora-ns
+# spec:
+#   type: LoadBalancer # ¡ESTO ES CLAVE! Azure creará una IP PÚBLICA real para este servicio
+#   ports:
+#   - port: 80    # El puerto por el que entran los usuarios (Navegador)
+#     targetPort: 8080   # A qué puerto del contenedor debe enviarse el tráfico
+#   selector:
+#     app: calculadora-app  # Conecta este Service con los Pods del Deployment
+
+---
+#NUEVA CONFIGURACIÓN: Service Interno (ClusterIP)
 apiVersion: v1
-kind: Service      #(1) Tipo de recurso que define cómo exponer tu aplicación al mundo exterior
+kind: Service
 metadata:
   name: calculadora-service
   namespace: calculadora-ns
 spec:
-  type: LoadBalancer # ¡ESTO ES CLAVE! Azure creará una IP PÚBLICA real para este servicio
+  type: ClusterIP    # El backend ahora es privado y solo accesible dentro del clúster
   ports:
-  - port: 80    # El puerto por el que entran los usuarios (Navegador)
-    targetPort: 8080   # A qué puerto del contenedor debe enviarse el tráfico
+  - port: 8080       # Puerto donde escuchará el servicio internamente
+    targetPort: 8080   # Puerto del contenedor de la aplicación
   selector:
-    app: calculadora-app  # Conecta este Service con los Pods del Deployment
+    app: calculadora-app  # Conecta con los Pods del Deployment
