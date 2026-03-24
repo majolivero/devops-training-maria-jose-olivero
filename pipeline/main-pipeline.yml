@@ -9,16 +9,25 @@ variables:
   wrapperScript: 'gradlew'
   tasks: 'clean test jacocoTestReport build'
 
+# ==========================================
+# DEFINICIÓN DE ETAPAS (STAGES)
+# ==========================================
 stages:
+
+# ----------------------------------------------------------------
+# ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
+# ----------------------------------------------------------------
 - stage: BuildAndSonar
-  displayName: 'Build and Sonar Analysis'
+  displayName: 'Etapa: Construcción y Análisis Sonar'
   jobs:
   - job: BuildAndSonarJob
-    displayName: 'Build and Sonar Job'
+    displayName: 'Trabajo: Compilar y Analizar'
+    # Pasos (Steps) que se ejecutan en este trabajo
     steps:
-    # Infraestructura básica: Storage Account, tfstate y AKS
+    
+    # Tarea (Task): Crear infraestructura básica para el estado si no existe
     - task: AzureCLI@2
-      displayName: 'Infra: Crear Storage Account, tfstate y AKS'
+      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
@@ -26,173 +35,141 @@ stages:
         inlineScript: |
           az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
           az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
-    #Paso 1. Compilación y pruebas con Gradle
+
+    # Tarea: Ejecutar Gradle para compilar y probar
     - task: Gradle@3
-      displayName: 'gradlew clean test jacocoTestReport build'
+      displayName: 'Tarea: Gradle - Compilar, Test y Build'
       inputs:
         gradleWrapperFile: '$(wrapperScript)'
         tasks: '$(tasks)'
         jdkVersionOption: '17'
 
-    #Paso 2. Preparación de SonarCloud
+    # Tarea: Configurar SonarCloud
     - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
-      displayName: 'Prepare analysis on SonarQube Cloud'
+      displayName: 'Tarea: SonarCloud - Preparar Análisis'
       inputs:
         SonarQube: SonarCloud-Majo
         organization: quind
         projectKey: com.entrenamiento.Calculadora
         projectName: 'Calculadora'
 
-    #Paso 3. Análisis de Código con SonarCloud
+    # Tarea: Ejecutar análisis de Sonar con Gradle
     - task: Gradle@3
-      displayName: 'Execute sonarqube analysis'
+      displayName: 'Tarea: Gradle - Ejecutar SonarQube'
       inputs:
         gradleWrapperFile: '$(wrapperScript)'
         tasks: 'sonarqube'
         jdkVersionOption: '17'
 
-    #Paso 4. Publicación de resultados de SonarCloud
+    # Tarea: Publicar resultados de calidad
     - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
-      displayName: 'Publish Quality Gate Result'
+      displayName: 'Tarea: SonarCloud - Publicar Quality Gate'
 
+    # Tarea: Copiar el .jar generado a la carpeta de artefactos
     - task: CopyFiles@2
-      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      displayName: 'Tarea: Copiar Artefactos .jar'
       inputs:
         SourceFolder: '$(system.defaultworkingdirectory)'
         Contents: '**/*.jar'
         TargetFolder: '$(build.artifactstagingdirectory)'
       condition: succeededOrFailed()
 
-    #Paso 5. Gestión de artefactos: Publicación de los archivos .jar generados
+    # Tarea: Publicar oficialmente el artefacto en Azure DevOps
     - task: PublishBuildArtifacts@1
-      displayName: 'Publish Artifact: drop'
+      displayName: 'Tarea: Publicar Artefacto drop'
       inputs:
         PathtoPublish: '$(build.artifactstagingdirectory)'
       condition: succeededOrFailed()
 
+# ----------------------------------------------------------------
+# ETAPA 2: Terraform, Docker y Despliegue en Kubernetes (AKS)
+# ----------------------------------------------------------------
 - stage: TerraformAndDeploy
-  displayName: 'Terraform and Deployment'
+  displayName: 'Etapa: Infraestructura y Despliegue'
   dependsOn: BuildAndSonar
   condition: succeeded()
   jobs:
   - job: TerraformAndDeployJob
-    displayName: 'Terraform and Deploy Job'
+    displayName: 'Trabajo: Terraform y Kubernetes'
     steps:
-    # Download artifacts from previous stage
+    
+    # Tarea: Descargar el .jar de la etapa anterior
     - task: DownloadBuildArtifacts@0
+      displayName: 'Tarea: Descargar Artefacto de Build'
       inputs:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
 
-    # Preparar la estructura de carpetas para el Dockerfile
+    # Paso de Script: Reconstruir la ruta que espera el Dockerfile
     - script: |
         mkdir -p build/libs
-        cp $(System.ArtifactsDirectory)/drop/**/*.jar build/libs/
+        find $(System.ArtifactsDirectory)/drop -name "*.jar" -exec cp {} build/libs/calculator-java-gradle-0.0.1-SNAPSHOT.jar \;
         ls -R build/libs/
-      displayName: 'Restaurar estructura de carpetas para Docker'
+      displayName: 'Script: Restaurar estructura para Docker'
 
-    # Automatización de Infraestructura y Contenedores
+    # Tarea: Instalar herramienta Terraform
     - task: TerraformInstaller@1
-      displayName: 'Instalar Terraform'
+      displayName: 'Tarea: Instalar Terraform'
       inputs:
         terraformVersion: 'latest'
 
-    # Usamos AzureCLI para que se encargue del login automáticamente
+    # Tarea: Ejecutar Terraform Init y Apply
     - task: AzureCLI@2
-      displayName: 'Terraform: Init & Apply'
+      displayName: 'Tarea: Terraform - Init y Apply'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          # 1. Automatizar la creación del Storage Account y Contenedor para el Estado
-          # Si ya existen, el comando no hará nada (Idempotencia).
-          echo "Asegurando existencia del Storage Account para el Estado..."
+          echo "Asegurando Storage Account para el Estado..."
           az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
           az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
 
           cd terraform
-          
-          # 2. Inyectar credenciales y usar Llave SSH desde Secreto
           export ARM_CLIENT_ID=$servicePrincipalId
           export ARM_CLIENT_SECRET=$servicePrincipalKey
           export ARM_TENANT_ID=$tenantId
           export ARM_SUBSCRIPTION_ID=$(subscription_id)
           
-          echo "Iniciando Terraform..."
-          # 3. Inicializar (Limpio, sin memoria previa)
           terraform init -input=false
-          
-          # 4. Crear infraestructura usando la variable SSH_PUBLIC_KEY de Azure DevOps
           terraform apply -auto-approve -input=false -var="ssh_public_key=$(SSH_PUBLIC_KEY)"
         addSpnToEnvironment: true
       env:
-        # Mapeamos la variable secreta para que el script de bash la pueda ver
         SSH_PUBLIC_KEY: $(SSH_PUBLIC_KEY)
         subscription_id: $(subscription_id)
 
-    # Construcción de imagen Docker y subida al Azure Container Registry (ACR)
+    # Tarea: Construir imagen Docker y subirla al ACR
     - task: AzureCLI@2
-      displayName: 'Docker: Build and Push to ACR'
+      displayName: 'Tarea: Docker - Build y Push a ACR'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          # 1. Login (Autenticación)
-          # "az acr login" usa la sesión actual del agente para entrar al registro privado.
           az acr login --name acrmajolivero1772830059
-
-          # 2. Build (Empaquetado)
-          # Toma el código de la calculadora y crea una imagen. 
-          # "$(Build.BuildId)" es un número único (ej: 450) para rastrear cada versión.
           docker build --build-arg BUILD_ID=$(Build.BuildId) -t acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) .
-
-          # 3. Tag (Etiquetado)
-          # Marcamos la misma imagen como "latest" (la más reciente). 
-          # Esto facilita saber cuál es la versión que debe estar en producción.
           docker tag acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId) acrmajolivero1772830059.azurecr.io/calculadora:latest
-
-          # 4. Push (Subida)
-          # Envía la imagen desde el agente de build hacia tu ACR en la nube de Azure.
           docker push acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)
           docker push acrmajolivero1772830059.azurecr.io/calculadora:latest
 
-    # Despliegue en AKS usando la imagen recién construida
+    # Tarea: Desplegar en el clúster de Kubernetes (AKS)
     - task: AzureCLI@2
-      displayName: 'AKS: Deploy Application'
+      displayName: 'Tarea: AKS - Desplegar Aplicación'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          # 1. Obtener credenciales del clúster AKS (Kubeconfig)
-          # Esto configura kubectl para hablar con tu clúster
           az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
-
-          # 2. Crear el namespace si no existe
-          # El comando "create namespace" fallaría si ya existe, por eso usamos "apply" o verificamos
           kubectl create namespace calculadora-ns --dry-run=client -o yaml | kubectl apply -f -
-
-          # 3. Creación automática del secreto para acceder al ACR (ImagePullSecret)
-          # Habilitamos el acceso administrador y obtenemos la contraseña en el momento
           az acr update -n acrmajolivero1772830059 --admin-enabled true
           ACR_PASSWORD=$(az acr credential show --name acrmajolivero1772830059 --query passwords[0].value -o tsv)
 
           kubectl create secret docker-registry acr-secret             --namespace calculadora-ns             --docker-server=acrmajolivero1772830059.azurecr.io             --docker-username=acrmajolivero1772830059             --docker-password=$ACR_PASSWORD             --dry-run=client -o yaml | kubectl apply -f -
 
-          # 4. Reemplazar la imagen en el manifiesto con la versión actual (Build.BuildId)
-          # Esto asegura que despliegas exactamente lo que acabas de compilar
           sed -i "s|image: acrmajolivero1772830059.azurecr.io/calculadora:latest|image: acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)|g" k8s/calculadora-deploy.yaml
-
-          # 5. Aplicar los manifiestos
-          # -f k8s/ aplica tanto el Deployment como el Service
           kubectl apply -f k8s/calculadora-deploy.yaml
-
-          # 6. Forzar reinicio para asegurar que baje la nueva imagen
           kubectl rollout restart deployment/calculadora-back -n calculadora-ns
-
-          # 7. Verificar el despliegue
           kubectl rollout status deployment/calculadora-back -n calculadora-ns
