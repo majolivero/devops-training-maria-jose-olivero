@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: calculadora-container  # Nombre del contenedor dentro del Pod
-        image: acrmajolivero1772830059.azurecr.io/calculadora:fix-manifest  # Se actualizará en el pipeline
+        image: acrmajolivero1772830059.azurecr.io/calculadora:latest  # Se actualizará en el pipeline
         ports:
         - containerPort: 8080  # Puerto donde tu app escucha dentro del contenedor
       imagePullSecrets:

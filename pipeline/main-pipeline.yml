@@ -171,5 +171,4 @@ stages:
 
           sed -i "s|image: acrmajolivero1772830059.azurecr.io/calculadora:latest|image: acrmajolivero1772830059.azurecr.io/calculadora:$(Build.BuildId)|g" k8s/calculadora-deploy.yaml
           kubectl apply -f k8s/calculadora-deploy.yaml
-          kubectl rollout restart deployment/calculadora-back -n calculadora-ns
-          kubectl rollout status deployment/calculadora-back -n calculadora-ns
+          kubectl rollout status deployment/calculadora-back -n calculadora-ns --timeout=5m
