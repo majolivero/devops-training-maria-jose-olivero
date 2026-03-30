@@ -6,7 +6,7 @@ pool:
   demands: java
 
 variables:
-  - group: calculadora-secrets  # Variables secretas: SSH_PUBLIC_KEY, subscription_id
+  - group: calculadora-secrets-majo  # Variables secretas: SSH_PUBLIC_KEY, subscription_id
   - name: wrapperScript
     value: 'gradlew'
   - name: tasks
