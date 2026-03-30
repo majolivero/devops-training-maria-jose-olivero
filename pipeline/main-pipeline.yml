@@ -126,6 +126,14 @@ stages:
         ls -R build/libs/
       displayName: 'Script: Restaurar estructura para Docker'
 
+    # Tarea: Reemplazar tokens en tfvars antes de Terraform
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Tarea: Reemplazar tokens en tfvars'
+      inputs:
+        targetFiles: 'terraform/*.tfvars'
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+
     # Tarea: Instalar herramienta Terraform
     - task: TerraformInstaller@1
       displayName: 'Tarea: Instalar Terraform'
@@ -175,9 +183,7 @@ stages:
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
       displayName: 'Tarea: Reemplazar tokens en manifiestos K8s'
       inputs:
-        targetFiles: |
-          k8s/*.yaml
-          terraform/*.tfvars
+        targetFiles: 'k8s/*.yaml'
         tokenPrefix: '#{'
         tokenSuffix: '}#'
 
