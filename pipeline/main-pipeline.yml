@@ -6,15 +6,25 @@ pool:
   demands: java
 
 variables:
-  wrapperScript: 'gradlew'
-  tasks: 'clean test jacocoTestReport build'
-  ACR_NAME: 'acrmajolivero1772830059'
-  K8S_NAMESPACE: 'calculadora-ns'
-  APP_PORT: '8080'
-  RESOURCE_GROUP: 'resource-group-maria-jose-olivero'
-  LOCATION: 'eastus'
-  VM_SIZE: 'Standard_B2s'
-  ADMIN_USERNAME: 'azureuser'
+  - group: calculadora-secrets  # Variables secretas: SSH_PUBLIC_KEY, subscription_id
+  - name: wrapperScript
+    value: 'gradlew'
+  - name: tasks
+    value: 'clean test jacocoTestReport build'
+  - name: ACR_NAME
+    value: 'acrmajolivero1772830059'
+  - name: K8S_NAMESPACE
+    value: 'calculadora-ns'
+  - name: APP_PORT
+    value: '8080'
+  - name: RESOURCE_GROUP
+    value: 'resource-group-maria-jose-olivero'
+  - name: LOCATION
+    value: 'eastus'
+  - name: VM_SIZE
+    value: 'Standard_B2s'
+  - name: ADMIN_USERNAME
+    value: 'azureuser'
 
 # ==========================================
 # DEFINICIÓN DE ETAPAS (STAGES)
