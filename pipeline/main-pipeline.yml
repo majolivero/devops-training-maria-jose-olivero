@@ -25,6 +25,28 @@ variables:
     value: 'Standard_B2s'
   - name: ADMIN_USERNAME
     value: 'azureuser'
+  - name: VM_NAME
+    value: 'vm-calculadora'
+  - name: PUBLIC_KEY_PATH
+    value: '$(sshPublicKey.secureFilePath)'
+  - name: VNET_NAME
+    value: 'vnet-calculadora'
+  - name: SUBNET_NAME
+    value: 'subnet-calculadora'
+  - name: NIC_NAME
+    value: 'nic-calculadora'
+  - name: PUBLIC_IP_NAME
+    value: 'pip-calculadora'
+  - name: NSG_NAME
+    value: 'nsg-calculadora'
+  - name: AKS_CLUSTER_NAME
+    value: 'aks-calculadora-majo'
+  - name: AKS_DNS_PREFIX
+    value: 'aks-calc'
+  - name: AKS_NODE_COUNT
+    value: '1'
+  - name: AKS_NODE_VM_SIZE
+    value: 'Standard_B2s'
 
 # ==========================================
 # DEFINICIÓN DE ETAPAS (STAGES)
@@ -125,6 +147,13 @@ stages:
         find $(System.ArtifactsDirectory)/drop -name "*.jar" -exec cp {} build/libs/calculator-java-gradle-0.0.1-SNAPSHOT.jar \;
         ls -R build/libs/
       displayName: 'Script: Restaurar estructura para Docker'
+
+    # Tarea: Descargar la llave pública SSH desde Secure Files
+    - task: DownloadSecureFile@1
+      name: sshPublicKey
+      displayName: 'Tarea: Descargar SSH Public Key desde Secure Files'
+      inputs:
+        secureFile: 'azure_vm.pub'
 
     # Tarea: Reemplazar tokens en tfvars antes de Terraform
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
