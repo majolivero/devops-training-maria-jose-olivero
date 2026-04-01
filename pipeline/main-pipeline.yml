@@ -204,6 +204,10 @@ stages:
             --docker-password=$ACR_PASSWORD \
             --dry-run=client -o yaml | kubectl apply -f -
 
+          # Limpiar recursos viejos creados con kubectl apply
+          kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
+          kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
+
           helm upgrade --install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
             --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
