@@ -6,47 +6,17 @@ pool:
   demands: java
 
 variables:
-  - group: calculadora-secrets-majo  # Variables secretas: SSH_PUBLIC_KEY, subscription_id
-  - name: wrapperScript
-    value: 'gradlew'
-  - name: tasks
-    value: 'clean test jacocoTestReport build'
-  - name: ACR_NAME
-    value: 'acrmajolivero1772830059'
-  - name: K8S_NAMESPACE
-    value: 'calculadora-ns'
-  - name: APP_PORT
-    value: '8080'
-  - name: RESOURCE_GROUP
-    value: 'resource-group-maria-jose-olivero'
-  - name: LOCATION
-    value: 'eastus'
-  - name: VM_SIZE
-    value: 'Standard_B2s'
-  - name: ADMIN_USERNAME
-    value: 'azureuser'
-  - name: VM_NAME
-    value: 'vm-calculadora'
+  # Todas las variables están centralizadas en el grupo de la librería de Azure DevOps
+  # Pipelines > Library > Variable Groups > calculadora-secrets-majo
+  # Variables del grupo: SSH_PUBLIC_KEY, subscription_id, wrapperScript, tasks,
+  # ACR_NAME, K8S_NAMESPACE, APP_PORT, RESOURCE_GROUP, LOCATION, VM_SIZE,
+  # ADMIN_USERNAME, VM_NAME, VNET_NAME, SUBNET_NAME, NIC_NAME, PUBLIC_IP_NAME,
+  # NSG_NAME, AKS_CLUSTER_NAME, AKS_DNS_PREFIX, AKS_NODE_COUNT, AKS_NODE_VM_SIZE
+  - group: calculadora-secrets-majo
+  # PUBLIC_KEY_PATH no puede ir en la librería: su valor ($(sshPublicKey.secureFilePath))
+  # es una ruta de runtime que solo existe después de ejecutar la tarea DownloadSecureFile@1
   - name: PUBLIC_KEY_PATH
     value: '$(sshPublicKey.secureFilePath)'
-  - name: VNET_NAME
-    value: 'vnet-calculadora'
-  - name: SUBNET_NAME
-    value: 'subnet-calculadora'
-  - name: NIC_NAME
-    value: 'nic-calculadora'
-  - name: PUBLIC_IP_NAME
-    value: 'pip-calculadora'
-  - name: NSG_NAME
-    value: 'nsg-calculadora'
-  - name: AKS_CLUSTER_NAME
-    value: 'aks-calculadora-majo'
-  - name: AKS_DNS_PREFIX
-    value: 'aks-calc'
-  - name: AKS_NODE_COUNT
-    value: '1'
-  - name: AKS_NODE_VM_SIZE
-    value: 'Standard_B2s'
 
 # ==========================================
 # DEFINICIÓN DE ETAPAS (STAGES)
