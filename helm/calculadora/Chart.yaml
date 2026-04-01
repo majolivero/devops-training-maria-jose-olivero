@@ -1,0 +1,6 @@
+apiVersion: v2
+name: calculadora
+description: Helm chart para desplegar el backend de la Calculadora en AKS
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

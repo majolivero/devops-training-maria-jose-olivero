@@ -178,13 +178,11 @@ stages:
           docker push $(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId)
           docker push $(ACR_NAME).azurecr.io/calculadora:latest
 
-    # Tarea: Reemplazar tokens en manifiestos de Kubernetes
-    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Tarea: Reemplazar tokens en manifiestos K8s'
+    # Tarea: Instalar Helm en el agente
+    - task: HelmInstaller@1
+      displayName: 'Tarea: Instalar Helm'
       inputs:
-        targetFiles: 'k8s/*.yaml'
-        tokenPrefix: '#{'
-        tokenSuffix: '}#'
+        helmVersionToInstall: 'latest'
 
     # Tarea: Desplegar en el clúster de Kubernetes (AKS)
     - task: AzureCLI@2
@@ -206,5 +204,11 @@ stages:
             --docker-password=$ACR_PASSWORD \
             --dry-run=client -o yaml | kubectl apply -f -
 
-          kubectl apply -f k8s/calculadora-deploy.yaml
-          kubectl rollout status deployment/calculadora-back -n $(K8S_NAMESPACE) --timeout=5m
+          helm upgrade --install calculadora ./helm/calculadora \
+            --namespace $(K8S_NAMESPACE) \
+            --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
+            --set image.tag=$(Build.BuildId) \
+            --set app.port=$(APP_PORT) \
+            --set service.port=$(APP_PORT) \
+            --wait --timeout 5m \
+            --atomic

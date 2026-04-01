@@ -1,0 +1,24 @@
+# Valores por defecto — se sobreescriben desde el pipeline con --set o -f
+replicaCount: 1
+
+image:
+  repository: "myacr.azurecr.io/calculadora"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: acr-secret
+
+app:
+  port: 8080
+
+service:
+  type: ClusterIP
+  port: 8080
+
+deployment:
+  name: calculadora-back
+  containerName: calculadora-container
+
+labels:
+  app: calculadora-app
