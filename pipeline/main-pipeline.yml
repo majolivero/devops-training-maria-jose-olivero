@@ -127,9 +127,11 @@ stages:
 
     # Tarea: Reemplazar tokens en tfvars antes de Terraform
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Tarea: Reemplazar tokens en tfvars'
+      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
       inputs:
-        targetFiles: 'terraform/*.tfvars'
+        targetFiles: |
+          terraform/*.tfvars
+          helm/calculadora/values.yaml
         tokenPrefix: '#{'
         tokenSuffix: '}#'
 
@@ -212,9 +214,5 @@ stages:
           # espera a que esté lista, y atomic: revierte automáticamente si algo falla.
           helm upgrade --install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
-            --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
-            --set image.tag=$(Build.BuildId) \
-            --set app.port=$(APP_PORT) \
-            --set service.port=$(APP_PORT) \
             --wait --timeout 5m \
             --atomic

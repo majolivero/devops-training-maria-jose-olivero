@@ -2,19 +2,19 @@
 replicaCount: 1
 
 image:
-  repository: "myacr.azurecr.io/calculadora"
-  tag: "latest"
+  repository: "#{ACR_NAME}#.azurecr.io/calculadora"
+  tag: "#{Build.BuildId}#"
   pullPolicy: Always
 
 imagePullSecrets:
   - name: acr-secret
 
 app:
-  port: 8080
+  port: #{APP_PORT}#
 
 service:
   type: ClusterIP
-  port: 8080
+  port: #{APP_PORT}#
 
 deployment:
   name: calculadora-back
