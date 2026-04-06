@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: "myacr.azurecr.io/calculadora"
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets:
   - name: acr-secret
@@ -22,3 +22,9 @@ deployment:
 
 labels:
   app: calculadora-app
+
+
+#Etiqueta label:
+#Define una etiqueta personalizada para el despliegue de la aplicación. Esta etiqueta se puede utilizar para identificar y organizar los recursos relacionados con la aplicación en Kubernetes. En este caso, se ha definido una etiqueta con el nombre "app" y el valor "calculadora-app".
+#Para que sirve la etiqueta label:
+#Las etiquetas en Kubernetes son pares clave-valor que se asignan a los objetos de Kubernetes, como pods, servicios, despliegues, etc. Estas etiquetas se utilizan para organizar y seleccionar recursos de Kubernetes. En este caso, la etiqueta "app: calculadora-app" se puede usar para identificar y seleccionar los recursos relacionados con la aplicación de calculadora. Por ejemplo, se puede usar esta etiqueta para seleccionar todos los pods que pertenecen a la aplicación de calculadora, lo que facilita la gestión y el monitoreo de los recursos relacionados con esta aplicación.

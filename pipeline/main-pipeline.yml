@@ -208,11 +208,13 @@ stages:
           kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
 
+          #Este comando instala/actualiza la app en AKS con la imagen recién construida, espera a que esté lista, y revierte automáticamente si algo falla.
           helm upgrade --install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
             --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
             --set image.tag=$(Build.BuildId) \
             --set app.port=$(APP_PORT) \
             --set service.port=$(APP_PORT) \
-            --wait --timeout 5m \
-            --atomic
+            --wait --timeout 5m \   # Esperar hasta que el despliegue esté listo(todos los pods estén en estado Running), con un timeout de 5 minutos
+            --atomic  # Si el despliegue falla, revertir automáticamente a la versión anterior para evitar dejar el clúster en un estado inconsistente
+  
