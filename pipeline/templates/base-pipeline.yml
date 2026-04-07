@@ -256,7 +256,7 @@ stages:
 # ----------------------------------------------------------------
 - stage: EcosystemIntegration
   displayName: 'Etapa: Ecosystem Integration'
-  dependsOn: DevelopmentIntegration
+  dependsOn: BuildAndSonar
   condition: succeeded()
   jobs:
   - job: EcosystemIntegrationJob
