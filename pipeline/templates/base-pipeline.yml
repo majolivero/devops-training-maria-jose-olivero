@@ -208,6 +208,10 @@ stages:
       inputs:
         secureFile: ${{ parameters.sshSecureFileName }}
 
+    # Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline
+    - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"
+      displayName: 'Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline'
+
     # Tarea: Reemplazar tokens
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
       displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
