@@ -114,6 +114,7 @@ stages:
       - name: PUBLIC_KEY_PATH
         value: '$(sshPublicKey.secureFilePath)'
     steps:
+    - script: ls -la
 
     # Tarea: Crear Storage Account para Terraform State
     - task: AzureCLI@2
