@@ -101,11 +101,11 @@ stages:
 # ----------------------------------------------------------------
 # ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
 # ----------------------------------------------------------------
-- stage: BuildAndSonar
-  displayName: 'Etapa: Build and Sonar Analysis'
+- stage: DevelopmentIntegration
+  displayName: 'Etapa: Development Integration'
   jobs:
   - job: BuildAndSonarJob
-    displayName: 'Development Integation'
+    displayName: 'Development Integration'
     pool:
       vmImage: ${{ parameters.vmImage }}
       demands: java
@@ -173,13 +173,13 @@ stages:
       condition: succeededOrFailed()
 
 # ----------------------------------------------------------------
-# ETAPA 2: Development Integration (Infraestructura con Terraform)
+# ETAPA 2: Terraform Infrastructure
 # ----------------------------------------------------------------
-- stage: DevelopmentIntegration
-  displayName: 'Etapa: Development Integration'
+- stage: TerraformInfrastructure
+  displayName: 'Etapa: Terraform Infrastructure'
   jobs:
-  - job: DevelopmentIntegrationJob
-    displayName: 'Infraestructura con Terraform'
+  - job: TerraformInfrastructureJob
+    displayName: 'Terraform Infrastructure'
     pool:
       vmImage: ${{ parameters.vmImage }}
     variables:
