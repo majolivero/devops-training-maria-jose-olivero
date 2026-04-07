@@ -1,0 +1,301 @@
+# ============================================================
+# PLANTILLA BASE (CEREBRO) - Repo B
+# ============================================================
+# Los repos que hereden de esta plantilla con "extends"
+# deben pasar los parámetros requeridos.
+# ============================================================
+
+parameters:
+  # -- Parámetros del pool --
+  - name: vmImage
+    type: string
+    default: 'ubuntu-latest'
+
+  # -- Parámetros del Variable Group --
+  - name: variableGroup
+    type: string
+
+  # -- Parámetros de Build (Gradle) --
+  - name: gradleWrapperFile
+    type: string
+    default: 'gradlew'
+  - name: gradleTasks
+    type: string
+    default: 'clean build'
+  - name: jdkVersion
+    type: string
+    default: '17'
+
+  # -- Parámetros de SonarCloud --
+  - name: sonarServiceConnection
+    type: string
+  - name: sonarOrganization
+    type: string
+  - name: sonarProjectKey
+    type: string
+  - name: sonarProjectName
+    type: string
+
+  # -- Parámetros de Azure / Infra --
+  - name: azureSubscription
+    type: string
+  - name: storageAccountName
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: storageLocation
+    type: string
+    default: 'eastus'
+
+  # -- Parámetros de Docker --
+  - name: dockerImageName
+    type: string
+  - name: dockerfilePath
+    type: string
+    default: 'Dockerfile'
+
+  # -- Parámetros de Terraform --
+  - name: terraformDir
+    type: string
+    default: 'terraform'
+
+  # -- Parámetros de SSH --
+  - name: sshSecureFileName
+    type: string
+    default: 'azure_vm.pub'
+
+  # -- Parámetros de Helm / K8s --
+  - name: helmChartPath
+    type: string
+    default: './helm/calculadora'
+  - name: helmReleaseName
+    type: string
+    default: 'calculadora'
+  - name: aksClusterName
+    type: string
+  - name: aksResourceGroup
+    type: string
+
+  # -- Parámetros de token replacement --
+  - name: tokenTargetFiles
+    type: string
+    default: |
+      terraform/*.tfvars
+      helm/calculadora/values.yaml
+
+  # -- Artefacto: patrón del archivo generado --
+  - name: artifactContents
+    type: string
+    default: '**/*.jar'
+
+  # -- Steps adicionales que el repo hijo puede inyectar --
+  - name: preDeploySteps
+    type: stepList
+    default: []
+  - name: postDeploySteps
+    type: stepList
+    default: []
+
+stages:
+
+# ----------------------------------------------------------------
+# ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
+# ----------------------------------------------------------------
+- stage: BuildAndSonar
+  displayName: 'Etapa: Construcción y Análisis Sonar'
+  jobs:
+  - job: BuildAndSonarJob
+    displayName: 'Compilar y Analizar'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+      demands: java
+    variables:
+      - group: ${{ parameters.variableGroup }}
+      - name: PUBLIC_KEY_PATH
+        value: '$(sshPublicKey.secureFilePath)'
+    steps:
+
+    # Tarea: Crear Storage Account para Terraform State
+    - task: AzureCLI@2
+      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
+          az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
+
+    # Tarea: Compilar con Gradle
+    - task: Gradle@3
+      displayName: 'Tarea: Gradle - Compilar, Test y Build'
+      inputs:
+        gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
+        tasks: ${{ parameters.gradleTasks }}
+        jdkVersionOption: ${{ parameters.jdkVersion }}
+
+    # Tarea: Preparar SonarCloud
+    - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
+      displayName: 'Tarea: SonarCloud - Preparar Análisis'
+      inputs:
+        SonarQube: ${{ parameters.sonarServiceConnection }}
+        organization: ${{ parameters.sonarOrganization }}
+        projectKey: ${{ parameters.sonarProjectKey }}
+        projectName: ${{ parameters.sonarProjectName }}
+
+    # Tarea: Ejecutar análisis SonarCloud
+    - task: Gradle@3
+      displayName: 'Tarea: Gradle - Ejecutar SonarQube'
+      inputs:
+        gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
+        tasks: 'sonarqube'
+        jdkVersionOption: ${{ parameters.jdkVersion }}
+
+    # Tarea: Publicar Quality Gate
+    - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
+      displayName: 'Tarea: SonarCloud - Publicar Quality Gate'
+
+    # Tarea: Copiar artefactos
+    - task: CopyFiles@2
+      displayName: 'Tarea: Copiar Artefactos'
+      inputs:
+        SourceFolder: '$(system.defaultworkingdirectory)'
+        Contents: ${{ parameters.artifactContents }}
+        TargetFolder: '$(build.artifactstagingdirectory)'
+      condition: succeededOrFailed()
+
+    # Tarea: Publicar artefacto
+    - task: PublishBuildArtifacts@1
+      displayName: 'Tarea: Publicar Artefacto drop'
+      inputs:
+        PathtoPublish: '$(build.artifactstagingdirectory)'
+      condition: succeededOrFailed()
+
+# ----------------------------------------------------------------
+# ETAPA 2: Terraform, Docker y Despliegue en Kubernetes (AKS)
+# ----------------------------------------------------------------
+- stage: TerraformAndDeploy
+  displayName: 'Etapa: Infraestructura y Despliegue'
+  dependsOn: BuildAndSonar
+  condition: succeeded()
+  jobs:
+  - job: TerraformAndDeployJob
+    displayName: 'Terraform y Kubernetes'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      - group: ${{ parameters.variableGroup }}
+      - name: PUBLIC_KEY_PATH
+        value: '$(sshPublicKey.secureFilePath)'
+    steps:
+
+    # Tarea: Descargar artefacto de la etapa anterior
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Tarea: Descargar Artefacto de Build'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    # Steps adicionales antes del deploy (inyectados por el repo hijo)
+    - ${{ each step in parameters.preDeploySteps }}:
+      - ${{ step }}
+
+    # Tarea: Descargar SSH key
+    - task: DownloadSecureFile@1
+      name: sshPublicKey
+      displayName: 'Tarea: Descargar SSH Public Key'
+      inputs:
+        secureFile: ${{ parameters.sshSecureFileName }}
+
+    # Tarea: Reemplazar tokens
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      inputs:
+        targetFiles: ${{ parameters.tokenTargetFiles }}
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+
+    # Tarea: Instalar Terraform
+    - task: TerraformInstaller@1
+      displayName: 'Tarea: Instalar Terraform'
+      inputs:
+        terraformVersion: 'latest'
+
+    # Tarea: Terraform Init y Apply
+    - task: AzureCLI@2
+      displayName: 'Tarea: Terraform - Init y Apply'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Asegurando Storage Account para el Estado..."
+          az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
+          az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
+
+          cd ${{ parameters.terraformDir }}
+          export ARM_CLIENT_ID=$servicePrincipalId
+          export ARM_CLIENT_SECRET=$servicePrincipalKey
+          export ARM_TENANT_ID=$tenantId
+          export ARM_SUBSCRIPTION_ID=$(subscription_id)
+
+          terraform init -input=false
+          terraform apply -auto-approve -input=false -var="ssh_public_key=$(SSH_PUBLIC_KEY)"
+        addSpnToEnvironment: true
+      env:
+        SSH_PUBLIC_KEY: $(SSH_PUBLIC_KEY)
+        subscription_id: $(subscription_id)
+
+    # Tarea: Docker Build y Push al ACR
+    - task: AzureCLI@2
+      displayName: 'Tarea: Docker - Build y Push a ACR'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az acr login --name $(ACR_NAME)
+          docker build -f ${{ parameters.dockerfilePath }} --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) .
+          docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
+          docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
+          docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
+
+    # Tarea: Instalar Helm
+    - task: HelmInstaller@1
+      displayName: 'Tarea: Instalar Helm'
+      inputs:
+        helmVersionToInstall: 'latest'
+
+    # Tarea: Desplegar en AKS
+    - task: AzureCLI@2
+      displayName: 'Tarea: AKS - Desplegar Aplicación'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+          az acr update -n $(ACR_NAME) --admin-enabled true
+          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
+
+          kubectl create secret docker-registry acr-secret \
+            --namespace $(K8S_NAMESPACE) \
+            --docker-server=$(ACR_NAME).azurecr.io \
+            --docker-username=$(ACR_NAME) \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
+          kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
+
+          helm upgrade --install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
+            --namespace $(K8S_NAMESPACE) \
+            --wait --timeout 5m \
+            --atomic
+
+    # Steps adicionales después del deploy (inyectados por el repo hijo)
+    - ${{ each step in parameters.postDeploySteps }}:
+      - ${{ step }}
