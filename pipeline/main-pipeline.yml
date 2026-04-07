@@ -95,7 +95,6 @@ stages:
 # ----------------------------------------------------------------
 - stage: TerraformInfrastructure
   displayName: 'Etapa: Terraform Infrastructure'
-  condition: succeeded()
   jobs:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
