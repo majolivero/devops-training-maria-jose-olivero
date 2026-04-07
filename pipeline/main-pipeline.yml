@@ -95,7 +95,6 @@ stages:
 # ----------------------------------------------------------------
 - stage: TerraformAndDeploy
   displayName: 'Etapa: Infraestructura y Despliegue'
-  dependsOn: BuildAndSonar
   condition: succeeded()
   jobs:
   - job: TerraformAndDeployJob
