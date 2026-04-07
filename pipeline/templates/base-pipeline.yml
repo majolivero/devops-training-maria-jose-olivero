@@ -102,10 +102,10 @@ stages:
 # ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
 # ----------------------------------------------------------------
 - stage: BuildAndSonar
-  displayName: 'Etapa: Construcción y Análisis Sonar'
+  displayName: 'Etapa: Build and Sonar Analysis'
   jobs:
   - job: BuildAndSonarJob
-    displayName: 'Compilar y Analizar'
+    displayName: 'Development Integation'
     pool:
       vmImage: ${{ parameters.vmImage }}
       demands: java
@@ -173,15 +173,13 @@ stages:
       condition: succeededOrFailed()
 
 # ----------------------------------------------------------------
-# ETAPA 2: Terraform, Docker y Despliegue en Kubernetes (AKS)
+# ETAPA 2: Development Integration (Infraestructura con Terraform)
 # ----------------------------------------------------------------
-- stage: TerraformAndDeploy
-  displayName: 'Etapa: Infraestructura y Despliegue'
-  dependsOn: BuildAndSonar
-  condition: succeeded()
+- stage: DevelopmentIntegration
+  displayName: 'Etapa: Development Integration'
   jobs:
-  - job: TerraformAndDeployJob
-    displayName: 'Terraform y Kubernetes'
+  - job: DevelopmentIntegrationJob
+    displayName: 'Infraestructura con Terraform'
     pool:
       vmImage: ${{ parameters.vmImage }}
     variables:
@@ -248,6 +246,39 @@ stages:
       env:
         SSH_PUBLIC_KEY: $(SSH_PUBLIC_KEY)
         subscription_id: $(subscription_id)
+
+# ----------------------------------------------------------------
+# ETAPA 3: Ecosystem Integration (Docker y Despliegue en AKS)
+# ----------------------------------------------------------------
+- stage: EcosystemIntegration
+  displayName: 'Etapa: Ecosystem Integration'
+  dependsOn: BuildAndSonar
+  condition: succeeded()
+  jobs:
+  - job: EcosystemIntegrationJob
+    displayName: 'Docker y Kubernetes'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      - group: ${{ parameters.variableGroup }}
+    steps:
+
+    # Tarea: Descargar artefacto de la etapa anterior
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Tarea: Descargar Artefacto de Build'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    # Tarea: Reemplazar tokens
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      inputs:
+        targetFiles: ${{ parameters.tokenTargetFiles }}
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
 
     # Tarea: Docker Build y Push al ACR
     - task: AzureCLI@2
