@@ -256,7 +256,9 @@ stages:
 # ----------------------------------------------------------------
 - stage: EcosystemIntegration
   displayName: 'Etapa: Ecosystem Integration'
-  dependsOn: DevelopmentIntegration
+  dependsOn:
+    - DevelopmentIntegration
+    - TerraformInfrastructure
   condition: succeeded()
   jobs:
   - job: EcosystemIntegrationJob
