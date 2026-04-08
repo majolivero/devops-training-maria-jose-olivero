@@ -188,14 +188,14 @@ stages:
         value: '$(sshPublicKey.secureFilePath)'
     steps:
 
-    # Tarea: Descargar artefacto de la etapa anterior
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Tarea: Descargar Artefacto de Build'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
+    # # Tarea: Descargar artefacto de la etapa anterior
+    # - task: DownloadBuildArtifacts@0
+    #   displayName: 'Tarea: Descargar Artefacto de Build'
+    #   inputs:
+    #     buildType: 'current'
+    #     downloadType: 'single'
+    #     artifactName: 'drop'
+    #     downloadPath: '$(System.ArtifactsDirectory)'
 
     # Steps adicionales antes del deploy (inyectados por el repo hijo)
     - ${{ each step in parameters.preDeploySteps }}:
