@@ -394,7 +394,8 @@ stages:
           helm upgrade --install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
             --namespace $(K8S_NAMESPACE) \
             --wait --timeout 5m \
-            --rollback-on-failure
+            --rollback-on-failure \
+            --force
 
     # Steps adicionales después del deploy (inyectados por el repo hijo)
     - ${{ each step in parameters.postDeploySteps }}:

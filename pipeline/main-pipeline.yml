@@ -302,4 +302,5 @@ stages:
           helm upgrade --install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
             --wait --timeout 5m \
-            --rollback-on-failure
+            --rollback-on-failure \
+            --force
