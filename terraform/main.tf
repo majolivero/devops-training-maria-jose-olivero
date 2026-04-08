@@ -4,13 +4,13 @@ data "azurerm_resource_group" "rg" {
   name = var.resource_group_name
 }
 
-# Virtual Network
-resource "azurerm_virtual_network" "vnet" {
-  name                = var.vnet_name
-  address_space       = var.address_space
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
-}
+# Virtual Network - YA EXISTE EN AZURE
+# resource "azurerm_virtual_network" "vnet" {
+#   name                = var.vnet_name
+#   address_space       = var.address_space
+#   location            = data.azurerm_resource_group.rg.location
+#   resource_group_name = data.azurerm_resource_group.rg.name
+# }
 
 # Subnet
 resource "azurerm_subnet" "subnet" {
@@ -34,68 +34,69 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
-# Public IP Address
-resource "azurerm_public_ip" "public_ip" {
-  name                = var.public_ip_name
-  location            = data.azurerm_resource_group.rg.location     #Pasa lo mismo que en linea 26 y 27
-  resource_group_name = data.azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-}
+# Public IP Address - YA EXISTE EN AZURE
+# resource "azurerm_public_ip" "public_ip" {
+#   name                = var.public_ip_name
+#   location            = data.azurerm_resource_group.rg.location     #Pasa lo mismo que en linea 26 y 27
+#   resource_group_name = data.azurerm_resource_group.rg.name
+#   allocation_method   = "Static"
+# }
 
 # Network Security Group
-resource "azurerm_network_security_group" "nsg" {
-  name                = var.nsg_name
-  location            = data.azurerm_resource_group.rg.location    #Pasa lo mismo que en linea 26 y 27
-  resource_group_name = data.azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "AllowSSH"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "AllowHTTP"
-    priority                   = 101
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "AllowHTTPS"
-    priority                   = 102
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "AllowAppPort"
-    priority                   = 103
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8080"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
+# Network Security Group - YA EXISTE EN AZURE
+# resource "azurerm_network_security_group" "nsg" {
+#   name                = var.nsg_name
+#   location            = data.azurerm_resource_group.rg.location    #Pasa lo mismo que en linea 26 y 27
+#   resource_group_name = data.azurerm_resource_group.rg.name
+#
+#   security_rule {
+#     name                       = "AllowSSH"
+#     priority                   = 100
+#     direction                  = "Inbound"
+#     access                     = "Allow"
+#     protocol                   = "Tcp"
+#     source_port_range          = "*"
+#     destination_port_range     = "22"
+#     source_address_prefix      = "*"
+#     destination_address_prefix = "*"
+#   }
+#
+#   security_rule {
+#     name                       = "AllowHTTP"
+#     priority                   = 101
+#     direction                  = "Inbound"
+#     access                     = "Allow"
+#     protocol                   = "Tcp"
+#     source_port_range          = "*"
+#     destination_port_range     = "80"
+#     source_address_prefix      = "*"
+#     destination_address_prefix = "*"
+#   }
+#
+#   security_rule {
+#     name                       = "AllowHTTPS"
+#     priority                   = 102
+#     direction                  = "Inbound"
+#     access                     = "Allow"
+#     protocol                   = "Tcp"
+#     source_port_range          = "*"
+#     destination_port_range     = "443"
+#     source_address_prefix      = "*"
+#     destination_address_prefix = "*"
+#   }
+#
+#   security_rule {
+#     name                       = "AllowAppPort"
+#     priority                   = 103
+#     direction                  = "Inbound"
+#     access                     = "Allow"
+#     protocol                   = "Tcp"
+#     source_port_range          = "*"
+#     destination_port_range     = "8080"
+#     source_address_prefix      = "*"
+#     destination_address_prefix = "*"
+#   }
+# }
 
 # Associate NSG with Subnet
 resource "azurerm_subnet_network_security_group_association" "nsg_association" {
@@ -135,36 +136,36 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 }
 
-# 1. Azure Container Registry (ACR)
-resource "azurerm_container_registry" "acr" {
-  name                = var.acr_name
-  resource_group_name = data.azurerm_resource_group.rg.name
-  location            = data.azurerm_resource_group.rg.location
-  sku                 = "Basic"
-  admin_enabled       = true
-}
+# 1. Azure Container Registry (ACR) - YA EXISTE EN AZURE
+# resource "azurerm_container_registry" "acr" {
+#   name                = var.acr_name
+#   resource_group_name = data.azurerm_resource_group.rg.name
+#   location            = data.azurerm_resource_group.rg.location
+#   sku                 = "Basic"
+#   admin_enabled       = true
+# }
 
-# 2. Azure Kubernetes Service (AKS)
-resource "azurerm_kubernetes_cluster" "aks" {
-  name                = var.aks_cluster_name
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
-  dns_prefix          = var.aks_dns_prefix
-
-  default_node_pool {
-    name       = "default"
-    node_count = var.aks_node_count
-    vm_size    = var.aks_node_vm_size
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  tags = {
-    Environment = "Dev"
-  }
-}
+# 2. Azure Kubernetes Service (AKS) - YA EXISTE EN AZURE
+# resource "azurerm_kubernetes_cluster" "aks" {
+#   name                = var.aks_cluster_name
+#   location            = data.azurerm_resource_group.rg.location
+#   resource_group_name = data.azurerm_resource_group.rg.name
+#   dns_prefix          = var.aks_dns_prefix
+#
+#   default_node_pool {
+#     name       = "default"
+#     node_count = var.aks_node_count
+#     vm_size    = var.aks_node_vm_size
+#   }
+#
+#   identity {
+#     type = "SystemAssigned"
+#   }
+#
+#   tags = {
+#     Environment = "Dev"
+#   }
+# }
 
 # 3. Permiso para que AKS pueda jalar imágenes del ACR (Role Assignment)
 #resource "azurerm_role_assignment" "aks_acr_pull" {
