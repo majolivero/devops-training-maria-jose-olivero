@@ -95,6 +95,7 @@ stages:
 # ----------------------------------------------------------------
 - stage: TerraformInfrastructure
   displayName: 'Etapa: Terraform Infrastructure'
+  dependsOn: []
   jobs:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
