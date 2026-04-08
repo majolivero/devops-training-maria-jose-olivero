@@ -116,17 +116,6 @@ stages:
     steps:
     - script: ls -la
 
-    # Tarea: Crear Storage Account para Terraform State  ------- Ponerlo en la parte de Infra ------------------
-    - task: AzureCLI@2
-      displayName: ' Infra - Crear Storage Account para Terraform'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
-          az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
-
     # Tarea: Compilar con Gradle
     - task: Gradle@3
       displayName: 'Gradle - Compilar, Test y Build'
@@ -188,15 +177,6 @@ stages:
         value: '$(sshPublicKey.secureFilePath)'
     steps:
 
-    # # Tarea: Descargar artefacto de la etapa anterior  -------- Esto revisarlo, no se necesita ------------
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Descargar Artefacto de Build'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
-
     # Steps adicionales antes del deploy (inyectados por el repo hijo)
     - ${{ each step in parameters.preDeploySteps }}:
       - ${{ step }}
@@ -209,8 +189,23 @@ stages:
         secureFile: ${{ parameters.sshSecureFileName }}
 
     # Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline
-    - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"  ----Revisarlo ----
+    - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"
       displayName: 'Exportar PUBLIC_KEY_PATH como variable de pipeline'
+
+    # Tarea: Leer contenido SSH Public Key y exportar como variable
+    - script: echo "##vso[task.setvariable variable=SSH_PUBLIC_KEY]$(cat $(sshPublicKey.secureFilePath))"
+      displayName: 'Leer y exportar SSH Public Key como variable'
+
+    # Tarea: Crear Storage Account para Terraform State
+    - task: AzureCLI@2
+      displayName: 'Infra - Crear Storage Account para Terraform'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
+          az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
 
     # Tarea: Reemplazar tokens
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
@@ -252,15 +247,15 @@ stages:
         subscription_id: $(subscription_id)
 
 # ----------------------------------------------------------------
-# ETAPA 3: Ecosystem Integration (Docker y Despliegue en AKS)
+# ETAPA 3: Artifact Management
 # ----------------------------------------------------------------
-- stage: EcosystemIntegration # La etapa 3 se va a dividir en 2 de la linea 257 a la linea 299 se llamara el stage Artifact MAnagement y de la linea 300 hacia terminar se va llamar ecosystem integration
-  displayName: 'Ecosystem Integration'
+- stage: ArtifactManagement
+  displayName: 'Artifact Management'
   dependsOn: DevelopmentIntegration
   condition: succeeded()
   jobs:
-  - job: EcosystemIntegrationJob
-    displayName: 'Docker y Kubernetes'
+  - job: ArtifactManagementJob
+    displayName: 'Artifact Management'
     pool:
       vmImage: ${{ parameters.vmImage }}
     variables:
@@ -276,15 +271,31 @@ stages:
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
 
-    # Tarea: Reemplazar tokens  -----Revisarlo -------
+    # Tarea: Reemplazar tokens en Helm values
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Reemplazar tokens en tfvars y values.yaml'
+      displayName: 'Reemplazar tokens en values.yaml'
       inputs:
-        targetFiles: ${{ parameters.tokenTargetFiles }}
+        targetFiles: 'helm/calculadora/values.yaml'
         tokenPrefix: '#{'
         tokenSuffix: '}#'
 
-    # Tarea: Docker Build y Push al ACR  ---- Ajustar con los pluggins de las tareas de Azure DevOps ----
+# ----------------------------------------------------------------
+# ETAPA 4: Ecosystem Integration (Docker y Despliegue en AKS)
+# ----------------------------------------------------------------
+- stage: EcosystemIntegration
+  displayName: 'Ecosystem Integration'
+  dependsOn: ArtifactManagement
+  condition: succeeded()
+  jobs:
+  - job: EcosystemIntegrationJob
+    displayName: 'Docker y Kubernetes'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      - group: ${{ parameters.variableGroup }}
+    steps:
+
+    # Tarea: Docker Build y Push al ACR
     - task: AzureCLI@2
       displayName: 'Docker - Build y Push a ACR'
       inputs:
@@ -293,7 +304,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az acr login --name $(ACR_NAME)
-          docker build -f ${{ parameters.dockerfilePath }} --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) .
+          docker build --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) ${{ parameters.dockerfilePath }}
           docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
@@ -304,29 +315,66 @@ stages:
       inputs:
         helmVersionToInstall: 'latest'
 
-    # Tarea: Desplegar en AKS
+    # Tarea: Obtener credenciales de AKS
     - task: AzureCLI@2
-      displayName: 'Tarea: AKS - Desplegar Aplicación'
+      displayName: 'AKS - Obtener Credenciales'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-          az acr update -n $(ACR_NAME) --admin-enabled true
-          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
 
+    # Tarea: Habilitar admin en ACR y crear secret Docker
+    - task: AzureCLI@2
+      displayName: 'ACR - Habilitar Admin y obtener credenciales'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az acr update -n $(ACR_NAME) --admin-enabled true
+          ACR_USERNAME=$(az acr credential show --name $(ACR_NAME) --query username -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
+          echo "##vso[task.setvariable variable=ACR_USERNAME]$ACR_USERNAME"
+          echo "##vso[task.setvariable variable=ACR_PASSWORD]$ACR_PASSWORD"
+
+    # Tarea: Crear/actualizar secret Docker Registry en AKS
+    - task: AzureCLI@2
+      displayName: 'K8s - Crear Secret Docker Registry'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
             --dry-run=client -o yaml | kubectl apply -f -
+      continueOnError: true
 
+    # Tarea: Eliminar recursos previos (opcional)
+    - task: AzureCLI@2
+      displayName: 'K8s - Limpiar Recursos Previos'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
+      continueOnError: true
 
+    # Tarea: Desplegar con Helm
+    - task: AzureCLI@2
+      displayName: 'Helm - Actualizar/Instalar Release'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           helm upgrade --install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
             --namespace $(K8S_NAMESPACE) \
             --wait --timeout 5m \

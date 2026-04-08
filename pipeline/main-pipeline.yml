@@ -100,15 +100,6 @@ stages:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
     steps:
-    
-    # Tarea: Descargar el .jar de la etapa anterior
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Tarea: Descargar Artefacto de Build'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
 
     # Tarea: Descargar la llave pública SSH desde Secure Files
     - task: DownloadSecureFile@1
@@ -121,13 +112,15 @@ stages:
     - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"
       displayName: 'Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline'
 
+    # Tarea: Leer contenido SSH Public Key y exportar como variable
+    - script: echo "##vso[task.setvariable variable=SSH_PUBLIC_KEY]$(cat $(sshPublicKey.secureFilePath))"
+      displayName: 'Tarea: Leer y exportar SSH Public Key como variable'
+
     # Tarea: Reemplazar tokens en tfvars antes de Terraform
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      displayName: 'Tarea: Reemplazar tokens en tfvars'
       inputs:
-        targetFiles: |
-          terraform/*.tfvars
-          helm/calculadora/values.yaml
+        targetFiles: terraform/*.tfvars
         tokenPrefix: '#{'
         tokenSuffix: '}#'
 
@@ -163,15 +156,15 @@ stages:
         subscription_id: $(subscription_id)
 
 # ----------------------------------------------------------------
-# ETAPA 3: Ecosystem Integration (Docker y Despliegue en AKS)
+# ETAPA 3: Artifact Management
 # ----------------------------------------------------------------
-- stage: EcosystemIntegration
-  displayName: 'Etapa: Ecosystem Integration'
+- stage: ArtifactManagement
+  displayName: 'Etapa: Artifact Management'
   dependsOn: DevelopmentIntegration
   condition: succeeded()
   jobs:
-  - job: EcosystemIntegrationJob
-    displayName: 'Docker y Kubernetes'
+  - job: ArtifactManagementJob
+    displayName: 'Artifact Management'
     steps:
 
     # Tarea: Descargar el .jar de la etapa anterior
@@ -190,14 +183,25 @@ stages:
         ls -R build/libs/
       displayName: 'Script: Restaurar estructura para Docker'
 
-    # Tarea: Reemplazar tokens en values.yaml antes de Helm
+    # Tarea: Reemplazar tokens en values.yaml
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
       displayName: 'Tarea: Reemplazar tokens en values.yaml'
       inputs:
-        targetFiles: |
-          helm/calculadora/values.yaml
+        targetFiles: helm/calculadora/values.yaml
         tokenPrefix: '#{'
         tokenSuffix: '}#'
+
+# ----------------------------------------------------------------
+# ETAPA 4: Ecosystem Integration (Docker y Despliegue en AKS)
+# ----------------------------------------------------------------
+- stage: EcosystemIntegration
+  displayName: 'Etapa: Ecosystem Integration'
+  dependsOn: ArtifactManagement
+  condition: succeeded()
+  jobs:
+  - job: EcosystemIntegrationJob
+    displayName: 'Docker y Kubernetes'
+    steps:
 
     # Tarea: Construir imagen Docker y subirla al ACR
     - task: AzureCLI@2
@@ -219,32 +223,66 @@ stages:
       inputs:
         helmVersionToInstall: 'latest'
 
-    # Tarea: Desplegar en el clúster de Kubernetes (AKS)
+    # Tarea: Obtener credenciales de AKS
     - task: AzureCLI@2
-      displayName: 'Tarea: AKS - Desplegar Aplicación'
+      displayName: 'Tarea: AKS - Obtener Credenciales'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-          az acr update -n $(ACR_NAME) --admin-enabled true
-          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
 
+    # Tarea: Habilitar admin en ACR y crear secret Docker
+    - task: AzureCLI@2
+      displayName: 'Tarea: ACR - Habilitar Admin y obtener credenciales'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az acr update -n $(ACR_NAME) --admin-enabled true
+          ACR_USERNAME=$(az acr credential show --name $(ACR_NAME) --query username -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
+          echo "##vso[task.setvariable variable=ACR_USERNAME]$ACR_USERNAME"
+          echo "##vso[task.setvariable variable=ACR_PASSWORD]$ACR_PASSWORD"
+
+    # Tarea: Crear/actualizar secret Docker Registry en AKS
+    - task: AzureCLI@2
+      displayName: 'Tarea: K8s - Crear Secret Docker Registry'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
             --dry-run=client -o yaml | kubectl apply -f -
+      continueOnError: true
 
-          # Limpiar recursos viejos creados con kubectl apply
+    # Tarea: Eliminar recursos previos (opcional)
+    - task: AzureCLI@2
+      displayName: 'Tarea: K8s - Limpiar Recursos Previos'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
+      continueOnError: true
 
-          # Este comando instala/actualiza la app en AKS con la imagen recién construida,
-          # espera a que esté lista, y atomic: revierte automáticamente si algo falla.
+    # Tarea: Desplegar con Helm
+    - task: AzureCLI@2
+      displayName: 'Tarea: Helm - Actualizar/Instalar Release'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
           helm upgrade --install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
             --wait --timeout 5m \
