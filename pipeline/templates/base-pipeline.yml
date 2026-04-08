@@ -101,76 +101,76 @@ stages:
 # ----------------------------------------------------------------
 # ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
 # ----------------------------------------------------------------
-- stage: DevelopmentIntegration
-  displayName: 'Etapa: Development Integration'
-  jobs:
-  - job: BuildAndSonarJob
-    displayName: 'Development Integration'
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-      demands: java
-    variables:
-      - group: ${{ parameters.variableGroup }}
-      - name: PUBLIC_KEY_PATH
-        value: '$(sshPublicKey.secureFilePath)'
-    steps:
-    - script: ls -la
+# - stage: DevelopmentIntegration
+#   displayName: 'Etapa: Development Integration'
+#   jobs:
+#   - job: BuildAndSonarJob
+#     displayName: 'Development Integration'
+#     pool:
+#       vmImage: ${{ parameters.vmImage }}
+#       demands: java
+#     variables:
+#       - group: ${{ parameters.variableGroup }}
+#       - name: PUBLIC_KEY_PATH
+#         value: '$(sshPublicKey.secureFilePath)'
+#     steps:
+#     - script: ls -la
 
-    # Tarea: Crear Storage Account para Terraform State
-    - task: AzureCLI@2
-      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
-          az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
+#     # Tarea: Crear Storage Account para Terraform State
+#     - task: AzureCLI@2
+#       displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
+#       inputs:
+#         azureSubscription: ${{ parameters.azureSubscription }}
+#         scriptType: 'bash'
+#         scriptLocation: 'inlineScript'
+#         inlineScript: |
+#           az storage account create --name ${{ parameters.storageAccountName }} --resource-group ${{ parameters.resourceGroup }} --location ${{ parameters.storageLocation }} --sku Standard_LRS --min-tls-version TLS1_2
+#           az storage container create --name tfstate --account-name ${{ parameters.storageAccountName }} --auth-mode login
 
-    # Tarea: Compilar con Gradle
-    - task: Gradle@3
-      displayName: 'Tarea: Gradle - Compilar, Test y Build'
-      inputs:
-        gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
-        tasks: ${{ parameters.gradleTasks }}
-        jdkVersionOption: ${{ parameters.jdkVersion }}
+#     # Tarea: Compilar con Gradle
+#     - task: Gradle@3
+#       displayName: 'Tarea: Gradle - Compilar, Test y Build'
+#       inputs:
+#         gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
+#         tasks: ${{ parameters.gradleTasks }}
+#         jdkVersionOption: ${{ parameters.jdkVersion }}
 
-    # Tarea: Preparar SonarCloud
-    - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
-      displayName: 'Tarea: SonarCloud - Preparar Análisis'
-      inputs:
-        SonarQube: ${{ parameters.sonarServiceConnection }}
-        organization: ${{ parameters.sonarOrganization }}
-        projectKey: ${{ parameters.sonarProjectKey }}
-        projectName: ${{ parameters.sonarProjectName }}
+#     # Tarea: Preparar SonarCloud
+#     - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
+#       displayName: 'Tarea: SonarCloud - Preparar Análisis'
+#       inputs:
+#         SonarQube: ${{ parameters.sonarServiceConnection }}
+#         organization: ${{ parameters.sonarOrganization }}
+#         projectKey: ${{ parameters.sonarProjectKey }}
+#         projectName: ${{ parameters.sonarProjectName }}
 
-    # Tarea: Ejecutar análisis SonarCloud
-    - task: Gradle@3
-      displayName: 'Tarea: Gradle - Ejecutar SonarQube'
-      inputs:
-        gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
-        tasks: 'sonarqube'
-        jdkVersionOption: ${{ parameters.jdkVersion }}
+#     # Tarea: Ejecutar análisis SonarCloud
+#     - task: Gradle@3
+#       displayName: 'Tarea: Gradle - Ejecutar SonarQube'
+#       inputs:
+#         gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
+#         tasks: 'sonarqube'
+#         jdkVersionOption: ${{ parameters.jdkVersion }}
 
-    # Tarea: Publicar Quality Gate
-    - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
-      displayName: 'Tarea: SonarCloud - Publicar Quality Gate'
+#     # Tarea: Publicar Quality Gate
+#     - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
+#       displayName: 'Tarea: SonarCloud - Publicar Quality Gate'
 
-    # Tarea: Copiar artefactos
-    - task: CopyFiles@2
-      displayName: 'Tarea: Copiar Artefactos'
-      inputs:
-        SourceFolder: '$(system.defaultworkingdirectory)'
-        Contents: ${{ parameters.artifactContents }}
-        TargetFolder: '$(build.artifactstagingdirectory)'
-      condition: succeededOrFailed()
+#     # Tarea: Copiar artefactos
+#     - task: CopyFiles@2
+#       displayName: 'Tarea: Copiar Artefactos'
+#       inputs:
+#         SourceFolder: '$(system.defaultworkingdirectory)'
+#         Contents: ${{ parameters.artifactContents }}
+#         TargetFolder: '$(build.artifactstagingdirectory)'
+#       condition: succeededOrFailed()
 
-    # Tarea: Publicar artefacto
-    - task: PublishBuildArtifacts@1
-      displayName: 'Tarea: Publicar Artefacto drop'
-      inputs:
-        PathtoPublish: '$(build.artifactstagingdirectory)'
-      condition: succeededOrFailed()
+#     # Tarea: Publicar artefacto
+#     - task: PublishBuildArtifacts@1
+#       displayName: 'Tarea: Publicar Artefacto drop'
+#       inputs:
+#         PathtoPublish: '$(build.artifactstagingdirectory)'
+#       condition: succeededOrFailed()
 
 # ----------------------------------------------------------------
 # ETAPA 2: Terraform Infrastructure
