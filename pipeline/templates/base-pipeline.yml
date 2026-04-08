@@ -102,7 +102,7 @@ stages:
 # ETAPA 1: Construcción y Análisis de Calidad (SonarCloud)
 # ----------------------------------------------------------------
 - stage: DevelopmentIntegration
-  displayName: 'Etapa: Development Integration'
+  displayName: 'Development Integration'
   jobs:
   - job: BuildAndSonarJob
     displayName: 'Development Integration'
@@ -116,9 +116,9 @@ stages:
     steps:
     - script: ls -la
 
-    # Tarea: Crear Storage Account para Terraform State
+    # Tarea: Crear Storage Account para Terraform State  ------- Ponerlo en la parte de Infra ------------------
     - task: AzureCLI@2
-      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
+      displayName: ' Infra - Crear Storage Account para Terraform'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
@@ -129,7 +129,7 @@ stages:
 
     # Tarea: Compilar con Gradle
     - task: Gradle@3
-      displayName: 'Tarea: Gradle - Compilar, Test y Build'
+      displayName: 'Gradle - Compilar, Test y Build'
       inputs:
         gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
         tasks: ${{ parameters.gradleTasks }}
@@ -137,7 +137,7 @@ stages:
 
     # Tarea: Preparar SonarCloud
     - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@4
-      displayName: 'Tarea: SonarCloud - Preparar Análisis'
+      displayName: 'SonarCloud - Preparar Análisis'
       inputs:
         SonarQube: ${{ parameters.sonarServiceConnection }}
         organization: ${{ parameters.sonarOrganization }}
@@ -146,7 +146,7 @@ stages:
 
     # Tarea: Ejecutar análisis SonarCloud
     - task: Gradle@3
-      displayName: 'Tarea: Gradle - Ejecutar SonarQube'
+      displayName: ' Gradle - Ejecutar SonarQube'
       inputs:
         gradleWrapperFile: ${{ parameters.gradleWrapperFile }}
         tasks: 'sonarqube'
@@ -154,11 +154,11 @@ stages:
 
     # Tarea: Publicar Quality Gate
     - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@4
-      displayName: 'Tarea: SonarCloud - Publicar Quality Gate'
+      displayName: ' SonarCloud - Publicar Quality Gate'
 
     # Tarea: Copiar artefactos
     - task: CopyFiles@2
-      displayName: 'Tarea: Copiar Artefactos'
+      displayName: 'Copiar Artefactos'
       inputs:
         SourceFolder: '$(system.defaultworkingdirectory)'
         Contents: ${{ parameters.artifactContents }}
@@ -167,7 +167,7 @@ stages:
 
     # Tarea: Publicar artefacto
     - task: PublishBuildArtifacts@1
-      displayName: 'Tarea: Publicar Artefacto drop'
+      displayName: 'Publicar Artefacto drop'
       inputs:
         PathtoPublish: '$(build.artifactstagingdirectory)'
       condition: succeededOrFailed()
@@ -176,7 +176,7 @@ stages:
 # ETAPA 2: Terraform Infrastructure
 # ----------------------------------------------------------------
 - stage: TerraformInfrastructure
-  displayName: 'Etapa: Terraform Infrastructure'
+  displayName: 'Terraform Infrastructure'
   jobs:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
@@ -188,9 +188,9 @@ stages:
         value: '$(sshPublicKey.secureFilePath)'
     steps:
 
-    # # Tarea: Descargar artefacto de la etapa anterior
+    # # Tarea: Descargar artefacto de la etapa anterior  -------- Esto revisarlo, no se necesita ------------
     - task: DownloadBuildArtifacts@0
-      displayName: 'Tarea: Descargar Artefacto de Build'
+      displayName: 'Descargar Artefacto de Build'
       inputs:
         buildType: 'current'
         downloadType: 'single'
@@ -201,20 +201,20 @@ stages:
     - ${{ each step in parameters.preDeploySteps }}:
       - ${{ step }}
 
-    # Tarea: Descargar SSH key
+    # Tarea: Descargar SSH key   ----Revisarlo ------
     - task: DownloadSecureFile@1
       name: sshPublicKey
-      displayName: 'Tarea: Descargar SSH Public Key'
+      displayName: 'Descargar SSH Public Key'
       inputs:
         secureFile: ${{ parameters.sshSecureFileName }}
 
     # Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline
-    - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"
-      displayName: 'Tarea: Exportar PUBLIC_KEY_PATH como variable de pipeline'
+    - script: echo "##vso[task.setvariable variable=PUBLIC_KEY_PATH]$(sshPublicKey.secureFilePath)"  ----Revisarlo ----
+      displayName: 'Exportar PUBLIC_KEY_PATH como variable de pipeline'
 
     # Tarea: Reemplazar tokens
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      displayName: 'Reemplazar tokens en tfvars y values.yaml'
       inputs:
         targetFiles: ${{ parameters.tokenTargetFiles }}
         tokenPrefix: '#{'
@@ -222,13 +222,13 @@ stages:
 
     # Tarea: Instalar Terraform
     - task: TerraformInstaller@1
-      displayName: 'Tarea: Instalar Terraform'
+      displayName: 'Instalar Terraform'
       inputs:
         terraformVersion: 'latest'
 
     # Tarea: Terraform Init y Apply
     - task: AzureCLI@2
-      displayName: 'Tarea: Terraform - Init y Apply'
+      displayName: 'Terraform - Init y Apply'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
@@ -254,8 +254,8 @@ stages:
 # ----------------------------------------------------------------
 # ETAPA 3: Ecosystem Integration (Docker y Despliegue en AKS)
 # ----------------------------------------------------------------
-- stage: EcosystemIntegration
-  displayName: 'Etapa: Ecosystem Integration'
+- stage: EcosystemIntegration # La etapa 3 se va a dividir en 2 de la linea 257 a la linea 299 se llamara el stage Artifact MAnagement y de la linea 300 hacia terminar se va llamar ecosystem integration
+  displayName: 'Ecosystem Integration'
   dependsOn: DevelopmentIntegration
   condition: succeeded()
   jobs:
@@ -276,17 +276,17 @@ stages:
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
 
-    # Tarea: Reemplazar tokens
+    # Tarea: Reemplazar tokens  -----Revisarlo -------
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      displayName: 'Reemplazar tokens en tfvars y values.yaml'
       inputs:
         targetFiles: ${{ parameters.tokenTargetFiles }}
         tokenPrefix: '#{'
         tokenSuffix: '}#'
 
-    # Tarea: Docker Build y Push al ACR
+    # Tarea: Docker Build y Push al ACR  ---- Ajustar con los pluggins de las tareas de Azure DevOps ----
     - task: AzureCLI@2
-      displayName: 'Tarea: Docker - Build y Push a ACR'
+      displayName: 'Docker - Build y Push a ACR'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
