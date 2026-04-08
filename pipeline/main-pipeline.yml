@@ -160,7 +160,7 @@ stages:
 # ----------------------------------------------------------------
 - stage: ArtifactManagement
   displayName: 'Etapa: Artifact Management'
-  dependsOn: DevelopmentIntegration
+  dependsOn: TerraformInfrastructure
   condition: succeeded()
   jobs:
   - job: ArtifactManagementJob
