@@ -299,8 +299,9 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          helm upgrade --install calculadora ./helm/calculadora \
+          helm uninstall calculadora -n $(K8S_NAMESPACE) --wait --ignore-not-found=true || true
+          sleep 10
+          helm install calculadora ./helm/calculadora \
             --namespace $(K8S_NAMESPACE) \
             --wait --timeout 5m \
-            --rollback-on-failure \
-            --force
+            --rollback-on-failure
