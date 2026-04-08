@@ -181,7 +181,8 @@ stages:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      # vmImage: ${{ parameters.vmImage }}
+      vmImage: Ubuntu-24.04
     variables:
       - group: ${{ parameters.variableGroup }}
       - name: PUBLIC_KEY_PATH
