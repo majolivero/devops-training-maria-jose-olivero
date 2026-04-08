@@ -182,7 +182,7 @@ stages:
     displayName: 'Terraform Infrastructure'
     pool:
       # vmImage: ${{ parameters.vmImage }}
-      vmImage: Ubuntu-24.04
+      vmImage: macOS-13
     variables:
       - group: ${{ parameters.variableGroup }}
       - name: PUBLIC_KEY_PATH
