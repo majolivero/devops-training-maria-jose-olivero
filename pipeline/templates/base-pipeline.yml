@@ -181,8 +181,7 @@ stages:
   - job: TerraformInfrastructureJob
     displayName: 'Terraform Infrastructure'
     pool:
-      # vmImage: ${{ parameters.vmImage }}
-      vmImage: macOS-13
+      vmImage: ${{ parameters.vmImage }}
     variables:
       - group: ${{ parameters.variableGroup }}
       - name: PUBLIC_KEY_PATH
@@ -190,13 +189,13 @@ stages:
     steps:
 
     # # Tarea: Descargar artefacto de la etapa anterior
-    # - task: DownloadBuildArtifacts@0
-    #   displayName: 'Tarea: Descargar Artefacto de Build'
-    #   inputs:
-    #     buildType: 'current'
-    #     downloadType: 'single'
-    #     artifactName: 'drop'
-    #     downloadPath: '$(System.ArtifactsDirectory)'
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Tarea: Descargar Artefacto de Build'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     # Steps adicionales antes del deploy (inyectados por el repo hijo)
     - ${{ each step in parameters.preDeploySteps }}:
@@ -255,84 +254,84 @@ stages:
 # ----------------------------------------------------------------
 # ETAPA 3: Ecosystem Integration (Docker y Despliegue en AKS)
 # ----------------------------------------------------------------
-# - stage: EcosystemIntegration
-#   displayName: 'Etapa: Ecosystem Integration'
-#   dependsOn: DevelopmentIntegration
-#   condition: succeeded()
-#   jobs:
-#   - job: EcosystemIntegrationJob
-#     displayName: 'Docker y Kubernetes'
-#     pool:
-#       vmImage: ${{ parameters.vmImage }}
-#     variables:
-#       - group: ${{ parameters.variableGroup }}
-#     steps:
+- stage: EcosystemIntegration
+  displayName: 'Etapa: Ecosystem Integration'
+  dependsOn: DevelopmentIntegration
+  condition: succeeded()
+  jobs:
+  - job: EcosystemIntegrationJob
+    displayName: 'Docker y Kubernetes'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      - group: ${{ parameters.variableGroup }}
+    steps:
 
-#     # Tarea: Descargar artefacto de la etapa anterior
-#     - task: DownloadBuildArtifacts@0
-#       displayName: 'Tarea: Descargar Artefacto de Build'
-#       inputs:
-#         buildType: 'current'
-#         downloadType: 'single'
-#         artifactName: 'drop'
-#         downloadPath: '$(System.ArtifactsDirectory)'
+    # Tarea: Descargar artefacto de la etapa anterior
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Tarea: Descargar Artefacto de Build'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
-#     # Tarea: Reemplazar tokens
-#     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-#       displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
-#       inputs:
-#         targetFiles: ${{ parameters.tokenTargetFiles }}
-#         tokenPrefix: '#{'
-#         tokenSuffix: '}#'
+    # Tarea: Reemplazar tokens
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Tarea: Reemplazar tokens en tfvars y values.yaml'
+      inputs:
+        targetFiles: ${{ parameters.tokenTargetFiles }}
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
 
-#     # Tarea: Docker Build y Push al ACR
-#     - task: AzureCLI@2
-#       displayName: 'Tarea: Docker - Build y Push a ACR'
-#       inputs:
-#         azureSubscription: ${{ parameters.azureSubscription }}
-#         scriptType: 'bash'
-#         scriptLocation: 'inlineScript'
-#         inlineScript: |
-#           az acr login --name $(ACR_NAME)
-#           docker build -f ${{ parameters.dockerfilePath }} --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) .
-#           docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
-#           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
-#           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
+    # Tarea: Docker Build y Push al ACR
+    - task: AzureCLI@2
+      displayName: 'Tarea: Docker - Build y Push a ACR'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az acr login --name $(ACR_NAME)
+          docker build -f ${{ parameters.dockerfilePath }} --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) .
+          docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
+          docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
+          docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
 
-#     # Tarea: Instalar Helm
-#     - task: HelmInstaller@1
-#       displayName: 'Tarea: Instalar Helm'
-#       inputs:
-#         helmVersionToInstall: 'latest'
+    # Tarea: Instalar Helm
+    - task: HelmInstaller@1
+      displayName: 'Tarea: Instalar Helm'
+      inputs:
+        helmVersionToInstall: 'latest'
 
-#     # Tarea: Desplegar en AKS
-#     - task: AzureCLI@2
-#       displayName: 'Tarea: AKS - Desplegar Aplicación'
-#       inputs:
-#         azureSubscription: ${{ parameters.azureSubscription }}
-#         scriptType: 'bash'
-#         scriptLocation: 'inlineScript'
-#         inlineScript: |
-#           az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
-#           kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-#           az acr update -n $(ACR_NAME) --admin-enabled true
-#           ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
+    # Tarea: Desplegar en AKS
+    - task: AzureCLI@2
+      displayName: 'Tarea: AKS - Desplegar Aplicación'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+          az acr update -n $(ACR_NAME) --admin-enabled true
+          ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
 
-#           kubectl create secret docker-registry acr-secret \
-#             --namespace $(K8S_NAMESPACE) \
-#             --docker-server=$(ACR_NAME).azurecr.io \
-#             --docker-username=$(ACR_NAME) \
-#             --docker-password=$ACR_PASSWORD \
-#             --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create secret docker-registry acr-secret \
+            --namespace $(K8S_NAMESPACE) \
+            --docker-server=$(ACR_NAME).azurecr.io \
+            --docker-username=$(ACR_NAME) \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
 
-#           kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
-#           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
+          kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
+          kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
 
-#           helm upgrade --install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
-#             --namespace $(K8S_NAMESPACE) \
-#             --wait --timeout 5m \
-#             --atomic
+          helm upgrade --install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
+            --namespace $(K8S_NAMESPACE) \
+            --wait --timeout 5m \
+            --atomic
 
-#     # Steps adicionales después del deploy (inyectados por el repo hijo)
-#     - ${{ each step in parameters.postDeploySteps }}:
-#       - ${{ step }}
+    # Steps adicionales después del deploy (inyectados por el repo hijo)
+    - ${{ each step in parameters.postDeploySteps }}:
+      - ${{ step }}
