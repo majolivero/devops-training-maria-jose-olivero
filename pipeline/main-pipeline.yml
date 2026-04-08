@@ -291,6 +291,14 @@ stages:
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
       continueOnError: true
 
+    # Tarea: Reemplazar tokens en values.yaml en Stage 4
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Tarea: Reemplazar tokens en helm values.yaml (Stage 4)'
+      inputs:
+        targetFiles: helm/calculadora/values.yaml
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+
     # Tarea: Desplegar con Helm
     - task: AzureCLI@2
       displayName: 'Tarea: Helm - Actualizar/Instalar Release'
