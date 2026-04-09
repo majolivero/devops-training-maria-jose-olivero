@@ -378,7 +378,7 @@ stages:
             --namespace $(K8S_NAMESPACE) \
             --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
             --set image.tag=$(Build.BuildId) \
-            --wait --timeout 15m
+            --wait --timeout 10m
       continueOnError: true
 
     # Steps adicionales después del deploy (inyectados por el repo hijo)
