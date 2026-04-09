@@ -213,7 +213,7 @@ stages:
     displayName: 'Kubernetes Deployment'
     steps:
 
-    # Tarea: Obtener credenciales de AKS y crear namespace (en el mismo contexto)
+    # Tarea: Obtener credenciales de AKS y crear namespace (sin validación remota)
     - task: AzureCLI@2
       displayName: 'Tarea: AKS - Obtener Credenciales y Crear Namespace'
       inputs:
@@ -222,7 +222,9 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply --validate=false -f -
+          mkdir -p /tmp/k8s-manifests
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml > /tmp/k8s-manifests/namespace.yaml
+          kubectl apply --validate=false -f /tmp/k8s-manifests/namespace.yaml
       continueOnError: true
 
     # Tarea: Instalar Helm en el agente
@@ -231,7 +233,7 @@ stages:
       inputs:
         helmVersionToInstall: 'latest'
 
-    # Tarea: Obtener credenciales ACR y crear secret (en el mismo contexto)
+    # Tarea: Obtener credenciales ACR y crear secret
     - task: AzureCLI@2
       displayName: 'Tarea: ACR - Habilitar Admin, obtener credenciales y crear Secret'
       inputs:
@@ -242,12 +244,15 @@ stages:
           az acr update -n $(ACR_NAME) --admin-enabled true
           ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
           
+          mkdir -p /tmp/k8s-manifests
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
-            --dry-run=client -o yaml | kubectl apply --validate=false -f -
+            --dry-run=client -o yaml > /tmp/k8s-manifests/secret.yaml
+          
+          kubectl apply --validate=false -f /tmp/k8s-manifests/secret.yaml
       continueOnError: true
 
     # Tarea: Eliminar recursos previos (opcional)
