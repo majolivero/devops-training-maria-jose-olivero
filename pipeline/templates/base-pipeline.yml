@@ -372,13 +372,15 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          helm uninstall ${{ parameters.helmReleaseName }} -n $(K8S_NAMESPACE) --wait --ignore-not-found=true || true
+          helm uninstall ${{ parameters.helmReleaseName }} -n "$(K8S_NAMESPACE)" --wait --ignore-not-found=true || true
           sleep 10
           helm install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
-            --namespace $(K8S_NAMESPACE) \
-            --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
-            --set image.tag=$(Build.BuildId) \            --set app.port=8080 \
-            --set service.port=8080 \            --wait --timeout 10m
+            --namespace "$(K8S_NAMESPACE)" \
+            --set "image.repository=$(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}" \
+            --set "image.tag=$(Build.BuildId)" \
+            --set "app.port=8080" \
+            --set "service.port=8080" \
+            --wait --timeout 10m
       continueOnError: true
 
     # Steps adicionales después del deploy (inyectados por el repo hijo)

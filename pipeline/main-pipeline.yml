@@ -270,13 +270,13 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          helm uninstall calculadora -n $(K8S_NAMESPACE) --wait --ignore-not-found=true || true
+          helm uninstall calculadora -n "$(K8S_NAMESPACE)" --wait --ignore-not-found=true || true
           sleep 10
           helm install calculadora ./helm/calculadora \
-            --namespace $(K8S_NAMESPACE) \
-            --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
-            --set image.tag=$(Build.BuildId) \
-            --set app.port=8080 \
-            --set service.port=8080 \
+            --namespace "$(K8S_NAMESPACE)" \
+            --set "image.repository=$(ACR_NAME).azurecr.io/calculadora" \
+            --set "image.tag=$(Build.BuildId)" \
+            --set "app.port=8080" \
+            --set "service.port=8080" \
             --wait --timeout 10m
       continueOnError: true
