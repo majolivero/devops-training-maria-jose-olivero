@@ -34,17 +34,6 @@ stages:
     # Pasos (Steps) que se ejecutan en este trabajo
     steps:
     
-    # Tarea (Task): Crear infraestructura básica para el estado si no existe
-    - task: AzureCLI@2
-      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
-      inputs:
-        azureSubscription: 'sc-majo-terraform-v2'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
-          az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
-
     # Tarea: Ejecutar Gradle para compilar y probar
     - task: Gradle@3
       displayName: 'Tarea: Gradle - Compilar, Test y Build'
@@ -116,6 +105,17 @@ stages:
     - script: echo "##vso[task.setvariable variable=SSH_PUBLIC_KEY]$(cat $(sshPublicKey.secureFilePath))"
       displayName: 'Tarea: Leer y exportar SSH Public Key como variable'
 
+    # Tarea: Crear Storage Account para Terraform State
+    - task: AzureCLI@2
+      displayName: 'Tarea: Infra - Crear Storage Account para Terraform'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
+          az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
+
     # Tarea: Reemplazar tokens en tfvars antes de Terraform
     - task: qetza.replacetokens.replacetokens-task.replacetokens@6
       displayName: 'Tarea: Reemplazar tokens en tfvars'
@@ -138,10 +138,6 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          echo "Asegurando Storage Account para el Estado..."
-          az storage account create --name stmajo1773169612 --resource-group resource-group-maria-jose-olivero --location eastus --sku Standard_LRS --min-tls-version TLS1_2
-          az storage container create --name tfstate --account-name stmajo1773169612 --auth-mode login
-
           cd terraform
           export ARM_CLIENT_ID=$servicePrincipalId
           export ARM_CLIENT_SECRET=$servicePrincipalKey
