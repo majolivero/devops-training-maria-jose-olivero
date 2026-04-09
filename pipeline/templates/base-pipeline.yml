@@ -316,7 +316,7 @@ stages:
       - group: ${{ parameters.variableGroup }}
     steps:
 
-    # Tarea: Obtener credenciales de AKS y crear namespace (sin validación remota)
+    # Tarea: Obtener credenciales de AKS y crear namespace (sin piping, sin validación)
     - task: AzureCLI@2
       displayName: 'AKS - Obtener Credenciales y Crear Namespace'
       inputs:
@@ -325,9 +325,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
-          mkdir -p /tmp/k8s-manifests
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml > /tmp/k8s-manifests/namespace.yaml
-          kubectl apply --validate=false -f /tmp/k8s-manifests/namespace.yaml
+          kubectl create namespace $(K8S_NAMESPACE) 2>/dev/null || echo "Namespace already exists"
       continueOnError: true
 
     # Tarea: Instalar Helm
@@ -347,15 +345,12 @@ stages:
           az acr update -n $(ACR_NAME) --admin-enabled true
           ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
           
-          mkdir -p /tmp/k8s-manifests
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
-            --dry-run=client -o yaml > /tmp/k8s-manifests/secret.yaml
-          
-          kubectl apply --validate=false -f /tmp/k8s-manifests/secret.yaml
+            2>/dev/null || echo "Secret already exists"
 
     # Tarea: Eliminar recursos previos (opcional)
     - task: AzureCLI@2

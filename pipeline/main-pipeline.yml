@@ -27,7 +27,7 @@ stages:
 # ETAPA 1: Development Integration (Construcción y Análisis)
 # ----------------------------------------------------------------
 - stage: DevelopmentIntegration
-  displayName: 'Etapa: Development Integration'
+  displayName: 'Development Integration'
   jobs:
   - job: BuildAndSonarJob
     displayName: 'Compilar y Analizar'
@@ -83,7 +83,7 @@ stages:
 # ETAPA 2: Terraform Infrastructure (Infraestructura con Terraform)
 # ----------------------------------------------------------------
 - stage: TerraformInfrastructure
-  displayName: 'Etapa: Terraform Infrastructure'
+  displayName: 'Terraform Infrastructure'
   dependsOn: DevelopmentIntegration
   jobs:
   - job: TerraformInfrastructureJob
@@ -155,7 +155,7 @@ stages:
 # ETAPA 3: Docker & Artifact Management
 # ----------------------------------------------------------------
 - stage: DockerArtifactManagement
-  displayName: 'Etapa: Artifact Management'
+  displayName: 'Artifact Management'
   dependsOn: TerraformInfrastructure
   condition: succeeded()
   jobs:
@@ -205,7 +205,7 @@ stages:
 # ETAPA 4: Kubernetes Deployment
 # ----------------------------------------------------------------
 - stage: KubernetesDeployment
-  displayName: 'Etapa: Kubernetes Deployment'
+  displayName: 'Ecosystem Integration'
   dependsOn: DockerArtifactManagement
   condition: succeeded()
   jobs:
@@ -213,7 +213,7 @@ stages:
     displayName: 'Kubernetes Deployment'
     steps:
 
-    # Tarea: Obtener credenciales de AKS y crear namespace (sin validación remota)
+    # Tarea: Obtener credenciales de AKS y crear namespace
     - task: AzureCLI@2
       displayName: 'Tarea: AKS - Obtener Credenciales y Crear Namespace'
       inputs:
@@ -222,9 +222,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
-          mkdir -p /tmp/k8s-manifests
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml > /tmp/k8s-manifests/namespace.yaml
-          kubectl apply --validate=false -f /tmp/k8s-manifests/namespace.yaml
+          kubectl create namespace $(K8S_NAMESPACE) 2>/dev/null || echo "Namespace already exists"
       continueOnError: true
 
     # Tarea: Instalar Helm en el agente
@@ -244,15 +242,12 @@ stages:
           az acr update -n $(ACR_NAME) --admin-enabled true
           ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
           
-          mkdir -p /tmp/k8s-manifests
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
-            --dry-run=client -o yaml > /tmp/k8s-manifests/secret.yaml
-          
-          kubectl apply --validate=false -f /tmp/k8s-manifests/secret.yaml
+            2>/dev/null || echo "Secret already exists"
       continueOnError: true
 
     # Tarea: Eliminar recursos previos (opcional)
