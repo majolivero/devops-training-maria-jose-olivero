@@ -10,11 +10,11 @@ imagePullSecrets:
   - name: acr-secret
 
 app:
-  port: #{APP_PORT}#
+  port: 8080  # Default port if APP_PORT token is not replaced
 
 service:
   type: ClusterIP
-  port: #{APP_PORT}#
+  port: 8080  # Default port
 
 deployment:
   name: calculadora-back
