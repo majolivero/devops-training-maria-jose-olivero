@@ -295,6 +295,17 @@ stages:
       - group: ${{ parameters.variableGroup }}
     steps:
 
+    # Tarea: Crear namespace en AKS - DEBE SER PRIMERA (antes de cualquier operación K8s)
+    - task: AzureCLI@2
+      displayName: 'K8s - Crear Namespace (PRIMERO)'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+      continueOnError: true
+
     # Tarea: Descargar Artefactos en Stage 4 para Docker build
     - task: DownloadBuildArtifacts@0
       displayName: 'Descargar Artefacto para Docker'
