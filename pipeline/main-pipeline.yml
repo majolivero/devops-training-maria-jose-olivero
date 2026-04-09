@@ -231,7 +231,7 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply --validate=false -f -
       continueOnError: true
 
     # Tarea: Instalar Helm en el agente
@@ -267,7 +267,7 @@ stages:
             --docker-server=$(ACR_NAME).azurecr.io \
             --docker-username=$(ACR_NAME) \
             --docker-password=$ACR_PASSWORD \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --dry-run=client -o yaml | kubectl apply --validate=false -f -
       continueOnError: true
 
     # Tarea: Eliminar recursos previos (opcional)
