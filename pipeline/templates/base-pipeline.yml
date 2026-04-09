@@ -247,15 +247,15 @@ stages:
         subscription_id: $(subscription_id)
 
 # ----------------------------------------------------------------
-# ETAPA 3: Artifact Management
+# ETAPA 3: Docker & Artifact Management
 # ----------------------------------------------------------------
-- stage: ArtifactManagement
-  displayName: 'Artifact Management'
+- stage: DockerArtifactManagement
+  displayName: 'Docker & Artifact Management'
   dependsOn: TerraformInfrastructure
   condition: succeeded()
   jobs:
-  - job: ArtifactManagementJob
-    displayName: 'Artifact Management'
+  - job: DockerBuildJob
+    displayName: 'Docker Build & Push'
     pool:
       vmImage: ${{ parameters.vmImage }}
     variables:
@@ -271,56 +271,20 @@ stages:
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
 
-    # Tarea: Reemplazar tokens en Helm values
-    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Reemplazar tokens en values.yaml'
-      inputs:
-        targetFiles: 'helm/calculadora/values.yaml'
-        tokenPrefix: '#{'
-        tokenSuffix: '}#'
-
-# ----------------------------------------------------------------
-# ETAPA 4: Ecosystem Integration (Docker y Despliegue en AKS)
-# ----------------------------------------------------------------
-- stage: EcosystemIntegration
-  displayName: 'Ecosystem Integration'
-  dependsOn: ArtifactManagement
-  condition: succeeded()
-  jobs:
-  - job: EcosystemIntegrationJob
-    displayName: 'Docker y Kubernetes'
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-    variables:
-      - group: ${{ parameters.variableGroup }}
-    steps:
-
-    # Tarea: Crear namespace en AKS - DEBE SER PRIMERA (antes de cualquier operación K8s)
-    - task: AzureCLI@2
-      displayName: 'K8s - Crear Namespace (PRIMERO)'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-      continueOnError: true
-
-    # Tarea: Descargar Artefactos en Stage 4 para Docker build
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Descargar Artefacto para Docker'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
-
     # Paso de Script: Restaurar estructura de build para Docker
     - script: |
         mkdir -p build/libs
         find $(System.ArtifactsDirectory)/drop -name "*.jar" -exec cp {} build/libs/calculator-java-gradle-0.0.1-SNAPSHOT.jar \;
         ls -R build/libs/
-      displayName: 'Script: Restaurar JAR para Docker build'
+      displayName: 'Script: Restaurar estructura para Docker'
+
+    # Tarea: Reemplazar tokens en Helm values
+    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+      displayName: 'Reemplazar tokens en helm values.yaml'
+      inputs:
+        targetFiles: ${{ parameters.helmChartPath }}/values.yaml
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
 
     # Tarea: Docker Build y Push al ACR
     - task: AzureCLI@2
@@ -335,6 +299,33 @@ stages:
           docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
+
+# ----------------------------------------------------------------
+# ETAPA 4: Kubernetes Deployment
+# ----------------------------------------------------------------
+- stage: KubernetesDeployment
+  displayName: 'Kubernetes Deployment'
+  dependsOn: DockerArtifactManagement
+  condition: succeeded()
+  jobs:
+  - job: KubernetesDeploymentJob
+    displayName: 'Kubernetes Deployment'
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    variables:
+      - group: ${{ parameters.variableGroup }}
+    steps:
+
+    # Tarea: Crear namespace en AKS - DEBE SER PRIMERA (antes de cualquier operación K8s)
+    - task: AzureCLI@2
+      displayName: 'K8s - Crear Namespace'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
+      continueOnError: true
 
     # Tarea: Instalar Helm
     - task: HelmInstaller@1
@@ -393,14 +384,6 @@ stages:
           kubectl delete service calculadora-service -n $(K8S_NAMESPACE) --ignore-not-found=true
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
       continueOnError: true
-
-    # Tarea: Reemplazar tokens en values.yaml en Stage 4
-    - task: qetza.replacetokens.replacetokens-task.replacetokens@6
-      displayName: 'Reemplazar tokens en helm values.yaml (Stage 4)'
-      inputs:
-        targetFiles: ${{ parameters.helmChartPath }}/values.yaml
-        tokenPrefix: '#{'
-        tokenSuffix: '}#'
 
     # Tarea: Desplegar con Helm
     - task: AzureCLI@2
