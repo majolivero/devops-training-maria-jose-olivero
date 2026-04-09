@@ -316,24 +316,15 @@ stages:
       - group: ${{ parameters.variableGroup }}
     steps:
 
-    # Tarea: Obtener credenciales de AKS (PRIMERO - antes de cualquier comando kubectl)
+    # Tarea: Obtener credenciales de AKS y crear namespace (en el mismo contexto)
     - task: AzureCLI@2
-      displayName: 'AKS - Obtener Credenciales'
+      displayName: 'AKS - Obtener Credenciales y Crear Namespace'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
-
-    # Tarea: Crear namespace en AKS
-    - task: AzureCLI@2
-      displayName: 'K8s - Crear Namespace'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
           kubectl create namespace $(K8S_NAMESPACE) --dry-run=client -o yaml | kubectl apply --validate=false -f -
       continueOnError: true
 
@@ -343,28 +334,17 @@ stages:
       inputs:
         helmVersionToInstall: 'latest'
 
-    # Tarea: Habilitar admin en ACR y crear secret Docker
+    # Tarea: Obtener credenciales ACR y crear secret (en el mismo contexto)
     - task: AzureCLI@2
-      displayName: 'ACR - Habilitar Admin y obtener credenciales'
+      displayName: 'ACR - Habilitar Admin, obtener credenciales y crear Secret'
       inputs:
         azureSubscription: ${{ parameters.azureSubscription }}
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
           az acr update -n $(ACR_NAME) --admin-enabled true
-          ACR_USERNAME=$(az acr credential show --name $(ACR_NAME) --query username -o tsv)
           ACR_PASSWORD=$(az acr credential show --name $(ACR_NAME) --query passwords[0].value -o tsv)
-          echo "##vso[task.setvariable variable=ACR_USERNAME]$ACR_USERNAME"
-          echo "##vso[task.setvariable variable=ACR_PASSWORD]$ACR_PASSWORD"
-
-    # Tarea: Crear/actualizar secret Docker Registry en AKS
-    - task: AzureCLI@2
-      displayName: 'K8s - Crear Secret Docker Registry'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
+          
           kubectl create secret docker-registry acr-secret \
             --namespace $(K8S_NAMESPACE) \
             --docker-server=$(ACR_NAME).azurecr.io \
