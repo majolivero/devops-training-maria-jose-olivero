@@ -250,7 +250,7 @@ stages:
 # ETAPA 3: Docker & Artifact Management
 # ----------------------------------------------------------------
 - stage: DockerArtifactManagement
-  displayName: 'Docker & Artifact Management'
+  displayName: 'Artifact Management'
   dependsOn: TerraformInfrastructure
   condition: succeeded()
   jobs:
@@ -304,7 +304,7 @@ stages:
 # ETAPA 4: Kubernetes Deployment
 # ----------------------------------------------------------------
 - stage: KubernetesDeployment
-  displayName: 'Kubernetes Deployment'
+  displayName: 'Ecosystem Integration'
   dependsOn: DockerArtifactManagement
   condition: succeeded()
   jobs:
