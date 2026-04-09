@@ -295,7 +295,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           az acr login --name $(ACR_NAME)
-          docker build --build-arg BUILD_ID=$(Build.BuildId) -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) ${{ parameters.dockerfilePath }}
+          docker build --build-arg BUILD_ID=$(Build.BuildId) -f ${{ parameters.dockerfilePath }} -t $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) .
           docker tag $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId) $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:$(Build.BuildId)
           docker push $(ACR_NAME).azurecr.io/${{ parameters.dockerImageName }}:latest
