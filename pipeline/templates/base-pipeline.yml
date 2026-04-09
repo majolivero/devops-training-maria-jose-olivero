@@ -377,8 +377,8 @@ stages:
           helm install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
             --namespace $(K8S_NAMESPACE) \
             --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
-            --set image.tag=$(Build.BuildId) \
-            --wait --timeout 10m
+            --set image.tag=$(Build.BuildId) \            --set app.port=8080 \
+            --set service.port=8080 \            --wait --timeout 10m
       continueOnError: true
 
     # Steps adicionales después del deploy (inyectados por el repo hijo)
