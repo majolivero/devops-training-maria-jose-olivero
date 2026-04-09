@@ -155,7 +155,7 @@ stages:
 # ETAPA 3: Docker & Artifact Management
 # ----------------------------------------------------------------
 - stage: DockerArtifactManagement
-  displayName: 'Etapa: Docker & Artifact Management'
+  displayName: 'Etapa: Artifact Management'
   dependsOn: TerraformInfrastructure
   condition: succeeded()
   jobs:
@@ -213,7 +213,17 @@ stages:
     displayName: 'Kubernetes Deployment'
     steps:
 
-    # Tarea: Crear namespace en AKS SI NO EXISTE (PRIMERO)
+    # Tarea: Obtener credenciales de AKS
+    - task: AzureCLI@2
+      displayName: 'Tarea: AKS - Obtener Credenciales'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
+
+    # Tarea: Crear namespace en AKS SI NO EXISTE
     - task: AzureCLI@2
       displayName: 'Tarea: K8s - Crear Namespace'
       inputs:
@@ -229,16 +239,6 @@ stages:
       displayName: 'Tarea: Instalar Helm'
       inputs:
         helmVersionToInstall: 'latest'
-
-    # Tarea: Obtener credenciales de AKS
-    - task: AzureCLI@2
-      displayName: 'Tarea: AKS - Obtener Credenciales'
-      inputs:
-        azureSubscription: 'sc-majo-terraform-v2'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az aks get-credentials --resource-group resource-group-maria-jose-olivero --name aks-calculadora-majo --overwrite-existing
 
     # Tarea: Habilitar admin en ACR y crear secret Docker
     - task: AzureCLI@2

@@ -316,7 +316,17 @@ stages:
       - group: ${{ parameters.variableGroup }}
     steps:
 
-    # Tarea: Crear namespace en AKS - DEBE SER PRIMERA (antes de cualquier operación K8s)
+    # Tarea: Obtener credenciales de AKS (PRIMERO - antes de cualquier comando kubectl)
+    - task: AzureCLI@2
+      displayName: 'AKS - Obtener Credenciales'
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
+
+    # Tarea: Crear namespace en AKS
     - task: AzureCLI@2
       displayName: 'K8s - Crear Namespace'
       inputs:
@@ -332,16 +342,6 @@ stages:
       displayName: 'Tarea: Instalar Helm'
       inputs:
         helmVersionToInstall: 'latest'
-
-    # Tarea: Obtener credenciales de AKS
-    - task: AzureCLI@2
-      displayName: 'AKS - Obtener Credenciales'
-      inputs:
-        azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksClusterName }} --overwrite-existing
 
     # Tarea: Habilitar admin en ACR y crear secret Docker
     - task: AzureCLI@2
