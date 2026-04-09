@@ -376,6 +376,8 @@ stages:
           sleep 10
           helm install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
             --namespace $(K8S_NAMESPACE) \
+            --set image.repository=$(ACR_NAME).azurecr.io/calculadora \
+            --set image.tag=$(Build.BuildId) \
             --wait --timeout 15m
       continueOnError: true
 
