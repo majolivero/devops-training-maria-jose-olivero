@@ -376,8 +376,7 @@ stages:
           sleep 10
           helm install ${{ parameters.helmReleaseName }} ${{ parameters.helmChartPath }} \
             --namespace $(K8S_NAMESPACE) \
-            --wait --timeout 5m \
-            --rollback-on-failure
+            --wait --timeout 15m
 
     # Steps adicionales después del deploy (inyectados por el repo hijo)
     - ${{ each step in parameters.postDeploySteps }}:
