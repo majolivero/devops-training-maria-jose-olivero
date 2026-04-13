@@ -36,6 +36,8 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - checkout: self
+      fetchDepth: 0
+      fetchTags: true
     - script: |
         urlRepo='$(Build.Repository.Uri)'
         projectNameRepo=$(echo "$urlRepo" | awk -F/ '{print $4}')
