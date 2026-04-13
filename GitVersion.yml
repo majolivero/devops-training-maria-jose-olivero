@@ -1,42 +1,12 @@
 mode: ContinuousDeployment
+next-version: 1.0.0
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
 increment: Patch
 commit-message-incrementing: Enabled
-major-version-bump-message: '^(break|breaking|\+semver:major)'
-minor-version-bump-message: '^feature|^feat|\+semver:minor'
-patch-version-bump-message: '^fix|^hotfix|\+semver:patch'
-no-bump-message: '^(docs|chore|style|refactor|perf|test)'
+major-version-bump-message: 'break,breaking,\+semver:major'
+minor-version-bump-message: 'feat,feature,\+semver:minor'
+patch-version-bump-message: 'fix,hotfix,\+semver:patch'
 legacy-semver-padding: 4
 build-metadata-padding: 4
 commits-since-version-source-padding: 4
-tag-prefix: ''
-continuous-delivery-fallback-tag: ci
-version-in-branch-name: false
-branches:
-  master:
-    regex: ^master$|^main$
-    mode: ContinuousDeployment
-    tag: ''
-    increment: Patch
-  develop:
-    regex: ^develop$|^dev$
-    mode: ContinuousDeployment
-    tag: alpha
-    increment: Minor
-    track-merge-target: true
-  release:
-    regex: ^releases?[-/]
-    mode: ContinuousDeployment
-    tag: beta
-    increment: Patch
-  feature:
-    regex: ^features?[-/]
-    mode: ContinuousDeployment
-    tag: feature
-    increment: Patch
-  pull-request:
-    regex: ^pull/|^pr[-/]
-    mode: ContinuousDeployment
-    tag: pr
-    increment: Patch
