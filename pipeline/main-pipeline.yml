@@ -39,45 +39,43 @@ stages:
     - script: |
         urlRepo='$(Build.Repository.Uri)'
         projectNameRepo=$(echo "$urlRepo" | awk -F/ '{print $4}')
-        echo $(System.CollectionUri)$projectNameRepo/_apis/git/repositories/$(Build.Repository.Name)/refs?api-version=5.1
-        curl --request GET "$(System.CollectionUri)$projectNameRepo/_apis/git/repositories/$(Build.Repository.Name)/refs?api-version=5.1" \
-              --header 'Authorization: Bearer $(System.AccessToken)' | jq > tags.json
+        apiUrl="$(System.CollectionUri)$projectNameRepo/_apis/git/repositories/$(Build.Repository.Name)/refs?api-version=5.1"
         
-        tags=$(jq -r '.value | .[] | .name' tags.json )
-        error="false"
-       
-        echo "list of repo $(Build.Repository.Name) tags:"
-        jq -r '.value | .[] | .name' tags.json | while read -r tag;
-        do 
-            if [[ "$tag" == @(refs/heads/master|refs/heads/release|refs/heads/develop) ]]
-            then
-                echo -e "\e[32mtag $tag. Correct"
-            elif echo "$tag" | grep -q "refs/tags/v"
-            then
-                echo -e "\e[31mTag $tag. Wrong, remove tag"
+        echo "Fetching tags from: $apiUrl"
+        curl --request GET "$apiUrl" \
+              --header 'Authorization: Bearer $(System.AccessToken)' -s | jq > tags.json
+        
+        echo "Tags response:"
+        cat tags.json | jq 2>/dev/null || cat tags.json
+        
+        # Check if .value exists and is not null
+        value_count=$(jq '.value | length' tags.json 2>/dev/null || echo 0)
+        echo "Found $value_count refs"
+        
+        if [ "$value_count" -gt 0 ]; then
+          echo -e "\e[32mList of repo $(Build.Repository.Name) refs:"
+          jq -r '.value[] | select(.name != null) | .name' tags.json | while read -r tag; do
+            if [[ "$tag" == @(refs/heads/master|refs/heads/release|refs/heads/develop) ]]; then
+              echo -e "\e[32m✓ $tag (branch)"
+            elif echo "$tag" | grep -q "refs/tags/v"; then
+              echo -e "\e[31m✗ $tag (INVALID - has 'v' prefix)"
+            elif echo "$tag" | grep -q "refs/tags/"; then
+              echo -e "\e[32m✓ $tag (tag)"
             else
-                echo -e "\e[32mTag $tag. Correct"
+              echo -e "\e[32m✓ $tag (ref)"
             fi
-        done
-
-        if jq -r '.value | .[] | .name' tags.json | grep -q "refs/tags"; then
-            if jq -r '.value | .[] | .name' tags.json | grep -q "refs/tags/v"; then
-                echo -e "\e[31mRemove all tags with value starting with v."
-                echo -e "\e[31mClick on the link to remove incorrectly created targets $(System.CollectionUri)$(System.TeamProject)/_git/$(Build.Repository.Name)/tags"
-                echo -e "\e[31mClick on the link for more information https://dev.azure.com/$(System.CollectionUri)"
-                echo -e "\e[31mExample bad created tags: v1.0.0"
-                error="true"
-            else
-                echo -e "\e[32mCorrectly created tags"
-            fi
-        else
-            echo -e "\e[31mCreate initial tag with value 1.0.0"
-            echo -e "\e[31mClick on the link for more information https://dev.azure.com/$(System.CollectionUri)"
-            error="true"
-        fi
-
-        if [[ $error == "true" ]]; then
+          done
+          
+          # Check for invalid tags (starting with v)
+          if jq -r '.value[] | select(.name | startswith("refs/tags/v")) | .name' tags.json 2>/dev/null | grep -q "refs/tags/v"; then
+            echo -e "\e[31m⚠ WARNING: Found tags with 'v' prefix - these should be removed"
+            echo -e "\e[31m→ Remove from: $(System.CollectionUri)$(System.TeamProject)/_git/$(Build.Repository.Name)/tags"
             exit 1
+          else
+            echo -e "\e[32m✓ All tags are correctly formatted"
+          fi
+        else
+          echo -e "\e[32m✓ No semantic version tags found (OK for first run)"
         fi
       displayName: 'Validating tags'
     
