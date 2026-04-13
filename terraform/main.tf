@@ -162,8 +162,19 @@ resource "azurerm_kubernetes_cluster" "aks" {
     type = "SystemAssigned"
   }
 
+  oidc_issuer_enabled       = true
+  open_service_mesh_enabled = false
+
   tags = {
     Environment = "Dev"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      default_node_pool[0].upgrade_settings,
+      oidc_issuer_enabled,
+      open_service_mesh_enabled
+    ]
   }
 }
 
