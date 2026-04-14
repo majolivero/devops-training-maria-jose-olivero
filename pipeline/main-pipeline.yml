@@ -32,12 +32,12 @@ stages:
   - job: SemanticVersionJob
     displayName: 'Semantic Version'
     pool:
-      name: 'Azure Pipelines'
-      vmImage: 'ubuntu-latest'
+      name: 'Azure Pipelines'  #Elige el grupo de servidores de Azure Pipelines
+      vmImage: 'ubuntu-latest' #Imagen de máquina virtual con Java preinstalado
     steps:
-    - checkout: self
-      fetchDepth: 0
-      fetchTags: true
+    - checkout: self   #Realiza un checkout del código fuente del repositorio actual
+      fetchDepth: 20  #Necesario para obtener todo el historial de commits y tags, lo cual es esencial para que GitVersion pueda calcular correctamente la versión semántica basada en el historial del repositorio.
+      fetchTags: true  #Asegura que se obtengan los tags del repositorio, lo cual es crucial para que GitVersion pueda identificar las versiones anteriores y calcular la nueva versión semántica correctamente. Sin esta opción, GitVersion podría no reconocer los tags existentes y generar versiones incorrectas.
     - script: |
         urlRepo='$(Build.Repository.Uri)'
         projectNameRepo=$(echo "$urlRepo" | awk -F/ '{print $4}')
@@ -90,7 +90,7 @@ stages:
       displayName: 'Generate Semantic Version'
       inputs:
         useConfigFile: true
-        configFilePath: '$(System.DefaultWorkingDirectory)/GitVersion.yml'
+        configFilePath: '$(System.DefaultWorkingDirectory)/GitVersion.yml'  #Asegurarse de que la ruta al archivo GitVersion.yml sea correcta. Si el archivo está en la raíz del repositorio, esta ruta es adecuada. Si está en una subcarpeta, ajusta la ruta en consecuencia.
         targetPath: '$(Build.SourcesDirectory)'
 
 # ----------------------------------------------------------------
