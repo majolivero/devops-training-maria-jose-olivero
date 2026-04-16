@@ -251,17 +251,40 @@ stages:
 
 # Tarea: Preparar caché de NVD Database para Dependency Check
       - task: CmdLine@2
-        displayName: 'Debug: List Artifact Contents'
+        displayName: 'Debug: Find All JAR Files and Artifacts'
         inputs:
           script: |
             echo "=== Current Directory ==="
             pwd
-            echo "=== Checking build/libs ==="
-            ls -la $(System.DefaultWorkingDirectory)/build/libs/ 2>/dev/null | head -20 || echo "build/libs not found"
-            echo "=== Checking artifact directory ==="
-            ls -la $(System.ArtifactsDirectory)/drop/ 2>/dev/null | head -20 || echo "Artifacts not found"
-            echo "=== Checking build.gradle ==="
-            ls -la $(System.DefaultWorkingDirectory)/build.gradle 2>/dev/null || echo "build.gradle not found"
+            ls -la
+            
+            echo ""
+            echo "=== System Variables ==="
+            echo "System.ArtifactsDirectory: $(System.ArtifactsDirectory)"
+            echo "System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)"
+            echo "Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)"
+            echo "Common.TestResultsDirectory: $(Common.TestResultsDirectory)"
+            
+            echo ""
+            echo "=== Search for all JAR files recursively ==="
+            find $(System.DefaultWorkingDirectory) -name "*.jar" -type f 2>/dev/null | head -20
+            
+            echo ""
+            echo "=== Check artifacts directory structure ==="
+            find $(System.ArtifactsDirectory) -type f 2>/dev/null | head -30
+            
+            echo ""
+            echo "=== Check build directory ==="
+            ls -laR $(System.DefaultWorkingDirectory)/build/ 2>/dev/null | head -50
+            
+            echo ""
+            echo "=== Check if drop folder exists ==="
+            if [ -d "$(System.ArtifactsDirectory)/drop" ]; then
+              echo "DROP FOLDER EXISTS. Contents:"
+              find "$(System.ArtifactsDirectory)/drop" -type f | head -20
+            else
+              echo "DROP FOLDER DOES NOT EXIST"
+            fi
         continueOnError: true
 
 # Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
