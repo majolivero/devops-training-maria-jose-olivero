@@ -260,13 +260,13 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
-          scanPath: '$(System.DefaultWorkingDirectory)/src/**'
+          scanPath: '$(System.DefaultWorkingDirectory)'
           format: 'ALL'
           dependencyCheckVersion: '8.4.2'
           enableProject: true
           autoUpdate: false
           dataDirectory: '$(Build.BinariesDirectory)/.dependencycheck/data'
-          additionalArguments: '--disableYarnAudit --disableNPMAudit --disableRubygems'
+          additionalArguments: '--disableYarnAudit --disableNPMAudit --disableRubygems --noupdate'
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP Dependency Check como artefactos y resultados de tests

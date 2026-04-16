@@ -1,18 +1,12 @@
-#Archivo de configuración para GitVersion, una herramienta que se utiliza para generar versiones semánticas basadas en el historial de commits y tags de un repositorio Git. Este archivo define cómo GitVersion debe calcular la versión del proyecto, incluyendo el esquema de versionado, las reglas para incrementar la versión, y los mensajes de commit que indican qué tipo de incremento se debe realizar (mayor, menor o parche).
-
-mode: ContinuousDeployment #Modo de versionado que se utiliza para proyectos que siguen un enfoque de despliegue continuo, donde cada commit puede generar una nueva versión.
+mode: ContinuousDeployment
 next-version: 2.0.0
-assembly-versioning-scheme: MajorMinorPatch  #Esquema de versionado para los ensamblados, que incluye el número mayor, menor y de parche.
+assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
-increment: Patch  #Tipo de incremento que se aplicará a la versión cuando se realice un commit que no tenga un mensaje específico para indicar el tipo de incremento. En este caso, se incrementará el número de parche por defecto.
+increment: Patch
 commit-message-incrementing: Enabled
-# Conventional Commits: https://www.conventionalcommits.org/
-# BREAKING CHANGE: o ! después del scope = MAJOR
-# feat:        = MINOR
-# fix|hotfix:  = PATCH
-major-version-bump-message: 'BREAKING CHANGE|break|breaking|\\+semver:major'  #Incremento MAJOR: cambios incompatibles
-minor-version-bump-message: 'feat|\\+semver:minor'   #Incremento MINOR: nuevas funcionalidades
-patch-version-bump-message: 'fix|hotfix|\\+semver:patch'  #Incremento PATCH: correcciones
-legacy-semver-padding: 4  #Número de dígitos que se utilizarán para rellenar los números de versión en el formato semántico.
-build-metadata-padding: 4 #Número de dígitos que se utilizarán para rellenar la parte de metadata de construcción en la versión semántica.
-commits-since-version-source-padding: 4  #Número de dígitos que se utilizarán para rellenar la parte de commits desde la versión fuente en la versión semántica.
+major-version-bump-message: 'break|breaking'
+minor-version-bump-message: 'feat|feature'
+patch-version-bump-message: 'fix|hotfix'
+legacy-semver-padding: 4
+build-metadata-padding: 4
+commits-since-version-source-padding: 4
