@@ -257,18 +257,17 @@ stages:
 
 # Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
       - task: dependency-check-build-task@6
-        displayName: 'Run SCA - OWASP Dependency Check'
+        displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
           scanPath: '$(System.DefaultWorkingDirectory)/src/**'
           format: 'ALL'
-          dependencyCheckVersion: '9.0.7'
+          dependencyCheckVersion: '8.4.2'
           enableProject: true
           autoUpdate: false
           dataDirectory: '$(Build.BinariesDirectory)/.dependencycheck/data'
+          additionalArguments: '--disableYarnAudit --disableNPMAudit --disableRubygems'
         continueOnError: true
-        env:
-          NVD_API_KEY: $(NVD_API_KEY)
 
 # Tarea: Publicar reportes de OWASP Dependency Check como artefactos y resultados de tests
       - task: PublishBuildArtifacts@1
