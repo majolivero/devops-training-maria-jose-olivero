@@ -266,7 +266,7 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
-          scanPath: '$(System.DefaultWorkingDirectory)/build/libs,$(System.DefaultWorkingDirectory)/build.gradle'
+          scanPath: '$(System.ArtifactsDirectory)/drop,$(System.DefaultWorkingDirectory)/build/libs,$(System.DefaultWorkingDirectory)/build.gradle'
           format: 'ALL'
           dependencyCheckVersion: '8.4.2'
           enableProject: true
