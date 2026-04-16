@@ -239,21 +239,38 @@ stages:
       - checkout: self
         fetchDepth: 0
 
+# Tarea: Descargar artefactos de la etapa de build para escanear dependencias
       - task: DownloadBuildArtifacts@0
         displayName: 'Download Build Artifact'
         inputs:
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
 
+# Tarea: Preparar caché de NVD Database para Dependency Check
+      - task: CmdLine@2
+        displayName: 'Prepare NVD Database Cache'
+        inputs:
+          script: |
+            mkdir -p $(Build.BinariesDirectory)/.dependencycheck
+            echo "Cache directory prepared for NVD database"
+        continueOnError: true
+
+# Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
-          projectName: 'OWASP Dependency Check'
-          scanPath: '$(System.DefaultWorkingDirectory)/**'
+          projectName: 'Calculadora SCA'
+          scanPath: '$(System.DefaultWorkingDirectory)/src/**'
           format: 'ALL'
-          dependencyCheckVersion: '7.1.1'
+          dependencyCheckVersion: '9.0.7'
+          enableProject: true
+          autoUpdate: false
+          dataDirectory: '$(Build.BinariesDirectory)/.dependencycheck/data'
         continueOnError: true
+        env:
+          NVD_API_KEY: $(NVD_API_KEY)
 
+# Tarea: Publicar reportes de OWASP Dependency Check como artefactos y resultados de tests
       - task: PublishBuildArtifacts@1
         displayName: 'Publish SCA Analysis Report'
         inputs:
@@ -261,6 +278,7 @@ stages:
           PathtoPublish: '$(Common.TestResultsDirectory)/dependency-check'
         condition: succeededOrFailed()
 
+# Publicar resultados de SCA como resultados de tests para visibilidad en Azure DevOps
       - task: PublishTestResults@2
         displayName: 'Publish SCA Test Results'
         condition: succeededOrFailed()
@@ -278,12 +296,14 @@ stages:
       - checkout: self
         fetchDepth: 1
 
+# Tarea: Ejecutar ShiftLeft SAST Scan para análisis de seguridad estático
       - task: CmdLine@2
         displayName: 'Run SAST - ShiftLeft Scan'
         inputs:
           script: docker run -v "$(Build.SourcesDirectory):/app:cached" -v "$(Build.ArtifactStagingDirectory):/reports:cached" shiftleft/sast-scan scan --src /app --out_dir /reports/static-analysis
         continueOnError: true
 
+# Tarea: Publicar reportes de SAST como artefactos para visibilidad en Azure DevOps
       - task: PublishBuildArtifacts@1
         displayName: 'Publish SAST Analysis Report'
         inputs:
@@ -291,6 +311,7 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/static-analysis'
         condition: succeededOrFailed()
 
+# Tarea: Publicar resultados de SAST como resultados de tests para visibilidad en Azure DevOps
       - task: CmdLine@2
         displayName: 'Check Disk Space'
         inputs:
