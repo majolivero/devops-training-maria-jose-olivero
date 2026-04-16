@@ -223,11 +223,85 @@ stages:
         subscription_id: $(subscription_id)
 
 # ----------------------------------------------------------------
-# ETAPA 3: Docker & Artifact Management
+# ETAPA 3: Technical Excellence (SCA & SAST)
+# ----------------------------------------------------------------
+- stage: TechnicalExcellence
+  displayName: 'Technical Excellence'
+  dependsOn: TerraformInfrastructure
+  condition: succeeded()
+  jobs:
+  - job: SoftwareCompositionAnalysis
+    displayName: 'Software Composition Analysis (SCA)'
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-24.04'
+    steps:
+      - checkout: self
+        fetchDepth: 0
+
+      - task: DownloadBuildArtifacts@0
+        displayName: 'Download Build Artifact'
+        inputs:
+          artifactName: 'drop'
+          downloadPath: '$(System.ArtifactsDirectory)'
+
+      - task: dependency-check-build-task@6
+        displayName: 'Run SCA - OWASP Dependency Check'
+        inputs:
+          projectName: 'OWASP Dependency Check'
+          scanPath: '$(System.DefaultWorkingDirectory)/**'
+          format: 'ALL'
+          dependencyCheckVersion: '7.1.1'
+        continueOnError: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish SCA Analysis Report'
+        inputs:
+          ArtifactName: 'SCA Analysis Report'
+          PathtoPublish: '$(Common.TestResultsDirectory)/dependency-check'
+        condition: succeededOrFailed()
+
+      - task: PublishTestResults@2
+        displayName: 'Publish SCA Test Results'
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: '$(Common.TestResultsDirectory)/dependency-check/*junit.xml'
+          testRunTitle: 'SCA Results'
+          mergeTestResults: true
+
+  - job: StaticApplicationSecurityTesting
+    displayName: 'Static Application Security Testing (SAST)'
+    pool:
+      name: 'Azure Pipelines'
+      vmImage: 'ubuntu-24.04'
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - task: CmdLine@2
+        displayName: 'Run SAST - ShiftLeft Scan'
+        inputs:
+          script: docker run -v "$(Build.SourcesDirectory):/app:cached" -v "$(Build.ArtifactStagingDirectory):/reports:cached" shiftleft/sast-scan scan --src /app --out_dir /reports/static-analysis
+        continueOnError: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish SAST Analysis Report'
+        inputs:
+          ArtifactName: 'Static Analysis (SAST)'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/static-analysis'
+        condition: succeededOrFailed()
+
+      - task: CmdLine@2
+        displayName: 'Check Disk Space'
+        inputs:
+          script: 'df -h'
+
+# ----------------------------------------------------------------
+# ETAPA 4: Docker & Artifact Management
 # ----------------------------------------------------------------
 - stage: DockerArtifactManagement
   displayName: 'Artifact Management'
-  dependsOn: TerraformInfrastructure
+  dependsOn: TechnicalExcellence
   condition: succeeded()
   jobs:
   - job: DockerBuildJob

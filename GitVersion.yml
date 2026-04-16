@@ -1,14 +1,25 @@
 #Archivo de configuración para GitVersion, una herramienta que se utiliza para generar versiones semánticas basadas en el historial de commits y tags de un repositorio Git. Este archivo define cómo GitVersion debe calcular la versión del proyecto, incluyendo el esquema de versionado, las reglas para incrementar la versión, y los mensajes de commit que indican qué tipo de incremento se debe realizar (mayor, menor o parche).
 
 mode: ContinuousDeployment #Modo de versionado que se utiliza para proyectos que siguen un enfoque de despliegue continuo, donde cada commit puede generar una nueva versión.
-next-version: 1.0.0
+next-version: 2.0.0
 assembly-versioning-scheme: MajorMinorPatch  #Esquema de versionado para los ensamblados, que incluye el número mayor, menor y de parche.
 assembly-file-versioning-scheme: MajorMinorPatch
 increment: Patch  #Tipo de incremento que se aplicará a la versión cuando se realice un commit que no tenga un mensaje específico para indicar el tipo de incremento. En este caso, se incrementará el número de parche por defecto.
 commit-message-incrementing: Enabled
-major-version-bump-message: 'break,breaking,\+semver:major'  #Mensajes de commit que indican que se debe realizar un incremento mayor en la versión. Incluye palabras clave como "break" o "breaking", así como un formato específico para indicar el tipo de incremento.
-minor-version-bump-message: 'feat,feature,\+semver:minor'   #Mensajes de commit que indican que se debe realizar un incremento menor en la versión. Incluye palabras clave como "feat" o "feature", así como un formato específico para indicar el tipo de incremento.
-patch-version-bump-message: 'fix,hotfix,\+semver:patch'  #Mensajes de commit que indican que se debe realizar un incremento de parche en la versión. Incluye palabras clave como "fix" o "hotfix", así como un formato específico para indicar el tipo de incremento.
-legacy-semver-padding: 4  #Número de dígitos que se utilizarán para rellenar los números de versión en el formato semántico. Esto es útil para mantener un formato consistente en las versiones, especialmente cuando se utilizan números de versión con varios dígitos.
-build-metadata-padding: 4 #Número de dígitos que se utilizarán para rellenar la parte de metadata de construcción en la versión semántica. Esto es útil para mantener un formato consistente en las versiones, especialmente cuando se utilizan números de versión con varios dígitos.
-commits-since-version-source-padding: 4  #Número de dígitos que se utilizarán para rellenar la parte de commits desde la versión fuente en la versión semántica. Esto es útil para mantener un formato consistente en las versiones, especialmente cuando se utilizan números de versión con varios dígitos.
+# Conventional Commits: https://www.conventionalcommits.org/
+# BREAKING CHANGE: o ! después del scope = MAJOR
+# feat:        = MINOR
+# fix|hotfix:  = PATCH
+# El sufijo +semver: permite override manual
+major-version-bump-message: 'BREAKING CHANGE|^\w+(\(.+\))?!:|^\w+!:|break|breaking|\+semver:major'  #Incremento MAJOR: cambios incompatibles
+minor-version-bump-message: 'feat|\+semver:minor'   #Incremento MINOR: nuevas funcionalidades
+patch-version-bump-message: 'fix|hotfix|\+semver:patch'  #Incremento PATCH: correcciones
+legacy-semver-padding: 4  #Número de dígitos que se utilizarán para rellenar los números de versión en el formato semántico.
+build-metadata-padding: 4 #Número de dígitos que se utilizarán para rellenar la parte de metadata de construcción en la versión semántica.
+commits-since-version-source-padding: 4  #Número de dígitos que se utilizarán para rellenar la parte de commits desde la versión fuente en la versión semántica.
+
+# Configuración adicional para mejor control
+merge-message-formats:
+  squash: '({0}) {1}'
+  merge-commit: 'Merge branch'
+  rebase-merge: 'Merge branch'
