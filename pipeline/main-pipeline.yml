@@ -248,11 +248,13 @@ stages:
 
 # Tarea: Preparar caché de NVD Database para Dependency Check
       - task: CmdLine@2
-        displayName: 'Prepare NVD Database Cache'
+        displayName: 'Debug: List Artifact Contents'
         inputs:
           script: |
-            mkdir -p $(Build.BinariesDirectory)/.dependencycheck
-            echo "Cache directory prepared for NVD database"
+            echo "=== Checking artifact directory ==="
+            ls -la $(System.ArtifactsDirectory)/drop/ 2>/dev/null | head -20 || echo "Artifacts not found"
+            echo "=== Checking build.gradle ==="
+            ls -la $(System.DefaultWorkingDirectory)/build.gradle
         continueOnError: true
 
 # Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
@@ -260,7 +262,7 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
-          scanPath: '$(System.DefaultWorkingDirectory)/build/libs/,$(System.DefaultWorkingDirectory)/build.gradle'
+          scanPath: '$(System.DefaultWorkingDirectory)'
           format: 'ALL'
           dependencyCheckVersion: '8.4.2'
           enableProject: true
