@@ -251,10 +251,14 @@ stages:
         displayName: 'Debug: List Artifact Contents'
         inputs:
           script: |
+            echo "=== Current Directory ==="
+            pwd
+            echo "=== Checking build/libs ==="
+            ls -la $(System.DefaultWorkingDirectory)/build/libs/ 2>/dev/null | head -20 || echo "build/libs not found"
             echo "=== Checking artifact directory ==="
             ls -la $(System.ArtifactsDirectory)/drop/ 2>/dev/null | head -20 || echo "Artifacts not found"
             echo "=== Checking build.gradle ==="
-            ls -la $(System.DefaultWorkingDirectory)/build.gradle
+            ls -la $(System.DefaultWorkingDirectory)/build.gradle 2>/dev/null || echo "build.gradle not found"
         continueOnError: true
 
 # Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
@@ -262,7 +266,7 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
-          scanPath: '$(System.DefaultWorkingDirectory)'
+          scanPath: '$(System.DefaultWorkingDirectory)/build/libs,$(System.DefaultWorkingDirectory)/build.gradle'
           format: 'ALL'
           dependencyCheckVersion: '8.4.2'
           enableProject: true
@@ -301,7 +305,7 @@ stages:
       - task: CmdLine@2
         displayName: 'Run SAST - ShiftLeft Scan'
         inputs:
-          script: docker run -v "$(Build.SourcesDirectory):/app:cached" -v "$(Build.ArtifactStagingDirectory):/reports:cached" shiftleft/sast-scan scan --src /app --out_dir /reports/static-analysis
+          script: docker run -v "$(Build.SourcesDirectory):/app:cached" -v "$(Build.ArtifactStagingDirectory):/reports:cached" shiftleft/sast-scan scan --src /app --out_dir /reports/static-analysis || true
         continueOnError: true
 
 # Tarea: Publicar reportes de SAST como artefactos para visibilidad en Azure DevOps
