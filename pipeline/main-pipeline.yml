@@ -287,44 +287,44 @@ stages:
             fi
         continueOnError: true
 
-# Tarea: Cachear la base de datos de NVD para reutilizar en siguientes ejecuciones
-      - task: Cache@2
-        displayName: 'Cache NVD Database'
+# Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
+      - task: CmdLine@2
+        displayName: 'Run SCA - Trivy Filesystem Scan'
         inputs:
-          key: 'dependencycheck | "$(Agent.OS)"'
-          path: '$(Build.BinariesDirectory)/.dependencycheck/data'
-          cacheHitVar: 'CACHE_RESTORED'
-
-# Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
-      - task: dependency-check-build-task@6
-        displayName: 'Run SCA - OWASP Dependency Check'
-        inputs:
-          projectName: 'Calculadora SCA'
-          scanPath: '$(System.ArtifactsDirectory)/build/libs/'
-          format: 'ALL'
-          dependencyCheckVersion: '8.4.2'
-          enableProject: true
-          autoUpdate: true
-          dataDirectory: '$(Build.BinariesDirectory)/.dependencycheck/data'
-          additionalArguments: '--failOnCVSS 11'
+          script: |
+            docker run --rm \
+              -v $(System.ArtifactsDirectory)/build/libs/:/scan:ro \
+              -v $(Build.ArtifactStagingDirectory):/reports:rw \
+              aquasec/trivy:latest filesystem \
+              --exit-code 0 \
+              --severity HIGH,CRITICAL \
+              --format json \
+              --output /reports/trivy-report.json \
+              /scan || true
         continueOnError: true
 
-# Tarea: Publicar reportes de OWASP Dependency Check como artefactos y resultados de tests
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish SCA Analysis Report'
+# Tarea: Generar reporte HTML de Trivy para visibilidad
+      - task: CmdLine@2
+        displayName: 'Generate Trivy HTML Report'
         inputs:
-          ArtifactName: 'SCA Analysis Report'
-          PathtoPublish: '$(Common.TestResultsDirectory)/dependency-check'
-        condition: succeededOrFailed()
+          script: |
+            docker run --rm \
+              -v $(Build.ArtifactStagingDirectory):/reports:rw \
+              aquasec/trivy:latest image \
+              --exit-code 0 \
+              --severity HIGH,CRITICAL \
+              --format sarif \
+              --output /reports/trivy-report.sarif \
+              aquasec/trivy:latest || true
+        continueOnError: true
 
-# Publicar resultados de SCA como resultados de tests para visibilidad en Azure DevOps
-      - task: PublishTestResults@2
-        displayName: 'Publish SCA Test Results'
-        condition: succeededOrFailed()
+# Tarea: Publicar reportes de Trivy como artefactos
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Trivy SCA Report'
         inputs:
-          testResultsFiles: '$(Common.TestResultsDirectory)/dependency-check/*junit.xml'
-          testRunTitle: 'SCA Results'
-          mergeTestResults: true
+          ArtifactName: 'SCA Analysis Report (Trivy)'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        condition: succeededOrFailed()
 
   - job: StaticApplicationSecurityTesting
     displayName: 'Static Application Security Testing (SAST)'
