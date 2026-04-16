@@ -10,16 +10,9 @@ commit-message-incrementing: Enabled
 # BREAKING CHANGE: o ! después del scope = MAJOR
 # feat:        = MINOR
 # fix|hotfix:  = PATCH
-# El sufijo +semver: permite override manual
-major-version-bump-message: 'BREAKING CHANGE|^\w+(\(.+\))?!:|^\w+!:|break|breaking|\+semver:major'  #Incremento MAJOR: cambios incompatibles
-minor-version-bump-message: 'feat|\+semver:minor'   #Incremento MINOR: nuevas funcionalidades
-patch-version-bump-message: 'fix|hotfix|\+semver:patch'  #Incremento PATCH: correcciones
+major-version-bump-message: 'BREAKING CHANGE|break|breaking|\\+semver:major'  #Incremento MAJOR: cambios incompatibles
+minor-version-bump-message: 'feat|\\+semver:minor'   #Incremento MINOR: nuevas funcionalidades
+patch-version-bump-message: 'fix|hotfix|\\+semver:patch'  #Incremento PATCH: correcciones
 legacy-semver-padding: 4  #Número de dígitos que se utilizarán para rellenar los números de versión en el formato semántico.
 build-metadata-padding: 4 #Número de dígitos que se utilizarán para rellenar la parte de metadata de construcción en la versión semántica.
 commits-since-version-source-padding: 4  #Número de dígitos que se utilizarán para rellenar la parte de commits desde la versión fuente en la versión semántica.
-
-# Configuración adicional para mejor control
-merge-message-formats:
-  squash: '({0}) {1}'
-  merge-commit: 'Merge branch'
-  rebase-merge: 'Merge branch'
