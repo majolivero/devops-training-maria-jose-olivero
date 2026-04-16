@@ -227,7 +227,9 @@ stages:
 # ----------------------------------------------------------------
 - stage: TechnicalExcellence
   displayName: 'Technical Excellence'
-  dependsOn: TerraformInfrastructure
+  dependsOn:
+    - DevelopmentIntegration
+    - TerraformInfrastructure
   condition: succeeded()
   jobs:
   - job: SoftwareCompositionAnalysis
