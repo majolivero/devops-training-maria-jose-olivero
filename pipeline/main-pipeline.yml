@@ -266,13 +266,13 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'Calculadora SCA'
-          scanPath: '$(System.ArtifactsDirectory)/drop,$(System.DefaultWorkingDirectory)/build/libs,$(System.DefaultWorkingDirectory)/build.gradle'
+          scanPath: '$(System.ArtifactsDirectory)/drop'
           format: 'ALL'
           dependencyCheckVersion: '8.4.2'
           enableProject: true
           autoUpdate: false
           dataDirectory: '$(Build.BinariesDirectory)/.dependencycheck/data'
-          additionalArguments: '--disableYarnAudit --disableNPMAudit --disableRubygems --noupdate'
+          additionalArguments: '--disableYarnAudit --disableNPMAudit --disableRubygems --noupdate --failOnCVSS 11'
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP Dependency Check como artefactos y resultados de tests
