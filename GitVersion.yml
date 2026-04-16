@@ -1,4 +1,4 @@
-mode: Mainline
+mode: ContinuousDeployment
 next-version: 2.1.0
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
