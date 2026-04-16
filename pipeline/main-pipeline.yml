@@ -242,9 +242,10 @@ stages:
         fetchDepth: 0
 
 # Tarea: Descargar artefactos de la etapa de build para escanear dependencias
-      - task: DownloadBuildArtifacts@0
+      - task: DownloadPipelineArtifact@2
         displayName: 'Download Build Artifact'
         inputs:
+          buildType: 'current'
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
 
