@@ -287,6 +287,14 @@ stages:
             fi
         continueOnError: true
 
+# Tarea: Cachear la base de datos de NVD para reutilizar en siguientes ejecuciones
+      - task: Cache@2
+        displayName: 'Cache NVD Database'
+        inputs:
+          key: 'dependencycheck | "$(Agent.OS)"'
+          path: '$(Build.BinariesDirectory)/.dependencycheck/data'
+          cacheHitVar: 'CACHE_RESTORED'
+
 # Tarea: Ejecutar OWASP Dependency Check para análisis de composición de software
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
