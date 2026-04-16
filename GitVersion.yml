@@ -4,9 +4,9 @@ assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatch
 increment: Patch
 commit-message-incrementing: Enabled
-major-version-bump-message: 'break|breaking'
-minor-version-bump-message: 'feat|feature'
-patch-version-bump-message: 'fix|hotfix'
+major-version-bump-message: '^break:|^breaking:'
+minor-version-bump-message: '^feat:'
+patch-version-bump-message: '^fix:'
 legacy-semver-padding: 4
 build-metadata-padding: 4
 commits-since-version-source-padding: 4
