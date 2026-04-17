@@ -249,13 +249,24 @@ stages:
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
 
+# Tarea: Preparar estructura de carpetas para Trivy con los JAR descargados
+      - task: CmdLine@2
+        displayName: 'Prepare JAR files for scanning'
+        inputs:
+          script: |
+            mkdir -p $(System.ArtifactsDirectory)/scan
+            find $(System.ArtifactsDirectory)/drop -name "*.jar" -type f -exec cp {} $(System.ArtifactsDirectory)/scan/ \;
+            echo "JAR files prepared for scanning:"
+            ls -lh $(System.ArtifactsDirectory)/scan/
+        continueOnError: true
+
 # Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
       - task: CmdLine@2
         displayName: 'Run SCA - Trivy Filesystem Scan'
         inputs:
           script: |
             docker run --rm \
-              -v $(System.ArtifactsDirectory)/build/libs/:/scan:ro \
+              -v $(System.ArtifactsDirectory)/scan:/scan:ro \
               -v $(Build.ArtifactStagingDirectory):/reports:rw \
               aquasec/trivy:latest filesystem \
               --exit-code 0 \
