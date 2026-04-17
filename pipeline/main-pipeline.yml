@@ -254,48 +254,9 @@ stages:
         displayName: 'Prepare JAR files for scanning'
         inputs:
           script: |
-            echo "=== System Directories ==="
             ARTIFACTS_DIR=$(System.ArtifactsDirectory)
-            echo "ARTIFACTS_DIR=$ARTIFACTS_DIR"
-            
-            echo ""
-            echo "=== Contents of artifacts directory ==="
-            ls -lh "$ARTIFACTS_DIR"
-            
-            echo ""
-            echo "=== Creating scan directory ==="
             mkdir -p "$ARTIFACTS_DIR/scan"
-            
-            echo ""
-            echo "=== Copying JAR file ==="
-            if [ -f "$ARTIFACTS_DIR/app.jar" ]; then
-              echo "Found app.jar, copying..."
-              cp "$ARTIFACTS_DIR/app.jar" "$ARTIFACTS_DIR/scan/"
-              echo "Copy completed"
-            else
-              echo "app.jar not found"
-            fi
-            
-            echo ""
-            echo "=== Verifying copy ==="
-            ls -lh "$ARTIFACTS_DIR/scan/"
-            file "$ARTIFACTS_DIR/scan/app.jar" || echo "File not readable"
-        continueOnError: true
-
-# Tarea: Debug - Verificar que los archivos existen antes de Trivy
-      - task: CmdLine@2
-        displayName: 'Debug: Verify files before Trivy scan'
-        inputs:
-          script: |
-            echo "=== Final verification before Trivy ==="
-            echo "Host scan directory:"
-            ls -lh $(System.ArtifactsDirectory)/scan/
-            echo ""
-            echo "File count:"
-            ls -1 $(System.ArtifactsDirectory)/scan/ | wc -l
-            echo ""
-            echo "=== All artifacts in parent directory ==="
-            ls -lh $(System.ArtifactsDirectory)/
+            cp "$ARTIFACTS_DIR/app.jar" "$ARTIFACTS_DIR/scan/" 2>/dev/null || true
         continueOnError: true
 
 # Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
@@ -303,7 +264,6 @@ stages:
         displayName: 'Run SCA - Trivy Filesystem Scan'
         inputs:
           script: |
-            echo "=== Starting Trivy Scan ==="
             docker run --rm \
               -v $(System.ArtifactsDirectory)/scan:/scan:ro \
               -v $(Build.ArtifactStagingDirectory):/reports:rw \
@@ -313,13 +273,6 @@ stages:
               --format json \
               --output /reports/trivy-report.json \
               /scan || true
-            
-            echo ""
-            echo "=== Verifying report generation ==="
-            ls -lh $(Build.ArtifactStagingDirectory)/trivy-report.json || echo "Report not generated"
-            echo ""
-            echo "=== Report content (first 50 lines) ==="
-            head -50 $(Build.ArtifactStagingDirectory)/trivy-report.json || echo "No report"
         continueOnError: true
 
 # Tarea: Publicar reportes de Trivy como artefactos
@@ -484,64 +437,4 @@ stages:
           
           echo "Helm install completed, waiting 30 seconds for pod to start..."
           sleep 30
-      continueOnError: true
-
-    # Tarea: Debug - Diagnosticar estado del deployment
-    - task: AzureCLI@2
-      displayName: 'Debug: Diagnosticar estado del Deployment'
-      inputs:
-        azureSubscription: 'sc-majo-terraform-v2'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          echo "=== Pod Status ==="
-          kubectl get pods -n $(K8S_NAMESPACE) -o wide
-          
-          echo ""
-          echo "=== Deployment Status ==="
-          kubectl get deployment -n $(K8S_NAMESPACE)
-          
-          echo ""
-          echo "=== Describe Deployment ==="
-          kubectl describe deployment calculadora-back -n $(K8S_NAMESPACE) || echo "Deployment not found"
-          
-          echo ""
-          echo "=== Pod Logs (últimas 50 líneas) ==="
-          POD_NAME=$(kubectl get pods -n $(K8S_NAMESPACE) -l app=calculadora-back -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-          if [ ! -z "$POD_NAME" ]; then
-            echo "Pod encontrado: $POD_NAME"
-            kubectl logs -n $(K8S_NAMESPACE) $POD_NAME --tail=50 || echo "No logs available"
-          else
-            echo "No pods found with label app=calculadora-back"
-          fi
-          
-          echo ""
-          echo "=== Events del Namespace ==="
-          kubectl get events -n $(K8S_NAMESPACE) --sort-by='.lastTimestamp' | tail -20
-          
-          echo ""
-          echo "=== Describe Service ==="
-          kubectl describe service calculadora-service -n $(K8S_NAMESPACE) || echo "Service not found"
-      continueOnError: true
-
-    # Tarea: Debug - Obtener logs completos del container
-    - task: AzureCLI@2
-      displayName: 'Debug: Obtener logs del container'
-      inputs:
-        azureSubscription: 'sc-majo-terraform-v2'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          echo "=== Container Logs (Todos) ==="
-          POD_NAME=$(kubectl get pods -n $(K8S_NAMESPACE) -l app=calculadora-back -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-          if [ ! -z "$POD_NAME" ]; then
-            echo "Obteniendo logs de: $POD_NAME"
-            kubectl logs -n $(K8S_NAMESPACE) $POD_NAME --all-containers=true 2>&1
-          else
-            echo "No pods found"
-          fi
-          
-          echo ""
-          echo "=== Container Events Detail ==="
-          kubectl get events -n $(K8S_NAMESPACE) -o json | jq -r '.items[] | select(.involvedObject.kind=="Pod") | "\(.reason): \(.message)"' 2>/dev/null || kubectl get events -n $(K8S_NAMESPACE)
       continueOnError: true
