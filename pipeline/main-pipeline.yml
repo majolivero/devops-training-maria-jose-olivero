@@ -254,10 +254,46 @@ stages:
         displayName: 'Prepare JAR files for scanning'
         inputs:
           script: |
+            echo "=== Checking System Artifact Directories ==="
+            echo "System.ArtifactsDirectory: $(System.ArtifactsDirectory)"
+            echo "Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)"
+            
+            echo ""
+            echo "=== Contents of $(System.ArtifactsDirectory)/drop ==="
+            if [ -d "$(System.ArtifactsDirectory)/drop" ]; then
+              find "$(System.ArtifactsDirectory)/drop" -type f | head -20
+              ls -lhR "$(System.ArtifactsDirectory)/drop" | head -50
+            else
+              echo "DROP directory does not exist"
+            fi
+            
+            echo ""
+            echo "=== Creating scan directory and copying JARs ==="
             mkdir -p $(System.ArtifactsDirectory)/scan
+            find $(System.ArtifactsDirectory)/drop -name "*.jar" -type f -exec ls -lh {} \;
             find $(System.ArtifactsDirectory)/drop -name "*.jar" -type f -exec cp {} $(System.ArtifactsDirectory)/scan/ \;
-            echo "JAR files prepared for scanning:"
+            
+            echo ""
+            echo "=== Contents of $(System.ArtifactsDirectory)/scan after copy ==="
             ls -lh $(System.ArtifactsDirectory)/scan/
+            echo "Total files in scan:"
+            find $(System.ArtifactsDirectory)/scan -type f | wc -l
+        continueOnError: true
+
+# Tarea: Debug - Verificar que los archivos existen antes de Trivy
+      - task: CmdLine@2
+        displayName: 'Debug: Verify files before Trivy scan'
+        inputs:
+          script: |
+            echo "=== Final verification before Trivy ==="
+            echo "Host scan directory:"
+            ls -lh $(System.ArtifactsDirectory)/scan/
+            echo ""
+            echo "File count:"
+            ls -1 $(System.ArtifactsDirectory)/scan/ | wc -l
+            echo ""
+            echo "=== All artifacts in parent directory ==="
+            ls -lh $(System.ArtifactsDirectory)/
         continueOnError: true
 
 # Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
@@ -265,6 +301,7 @@ stages:
         displayName: 'Run SCA - Trivy Filesystem Scan'
         inputs:
           script: |
+            echo "=== Starting Trivy Scan ==="
             docker run --rm \
               -v $(System.ArtifactsDirectory)/scan:/scan:ro \
               -v $(Build.ArtifactStagingDirectory):/reports:rw \
@@ -274,6 +311,13 @@ stages:
               --format json \
               --output /reports/trivy-report.json \
               /scan || true
+            
+            echo ""
+            echo "=== Verifying report generation ==="
+            ls -lh $(Build.ArtifactStagingDirectory)/trivy-report.json || echo "Report not generated"
+            echo ""
+            echo "=== Report content (first 50 lines) ==="
+            head -50 $(Build.ArtifactStagingDirectory)/trivy-report.json || echo "No report"
         continueOnError: true
 
 # Tarea: Publicar reportes de Trivy como artefactos
