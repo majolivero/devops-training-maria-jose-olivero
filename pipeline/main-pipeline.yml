@@ -262,11 +262,10 @@ stages:
         displayName: 'Run SCA'
         inputs:
           projectName: 'OWASP Dependency Check'
-          scanPath: '$(System.DefaultWorkingDirectory)/**'
+          scanPath: '$(System.DefaultWorkingDirectory)'
           format: 'ALL'
-          dependencyCheckVersion: 7.1.1
-          # Se añade la API Key mediante argumentos adicionales
-          additionalArguments: '--nvdApiKey $(NVD_API_KEY)'
+          dependencyCheckVersion: '9.0.9' # CRÍTICO: Usar versión moderna
+          additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 8000' # Retraso para evitar baneos
         continueOnError: true
 # Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
       - task: CmdLine@2
