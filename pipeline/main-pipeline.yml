@@ -249,44 +249,6 @@ stages:
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
 
-# Tarea: Preparar caché de NVD Database para Dependency Check
-      - task: CmdLine@2
-        displayName: 'Debug: Find All JAR Files and Artifacts'
-        inputs:
-          script: |
-            echo "=== Current Directory ==="
-            pwd
-            ls -la
-            
-            echo ""
-            echo "=== System Variables ==="
-            echo "System.ArtifactsDirectory: $(System.ArtifactsDirectory)"
-            echo "System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)"
-            echo "Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)"
-            echo "Common.TestResultsDirectory: $(Common.TestResultsDirectory)"
-            
-            echo ""
-            echo "=== Search for all JAR files recursively ==="
-            find $(System.DefaultWorkingDirectory) -name "*.jar" -type f 2>/dev/null | head -20
-            
-            echo ""
-            echo "=== Check artifacts directory structure ==="
-            find $(System.ArtifactsDirectory) -type f 2>/dev/null | head -30
-            
-            echo ""
-            echo "=== Check build directory ==="
-            ls -laR $(System.DefaultWorkingDirectory)/build/ 2>/dev/null | head -50
-            
-            echo ""
-            echo "=== Check if drop folder exists ==="
-            if [ -d "$(System.ArtifactsDirectory)/drop" ]; then
-              echo "DROP FOLDER EXISTS. Contents:"
-              find "$(System.ArtifactsDirectory)/drop" -type f | head -20
-            else
-              echo "DROP FOLDER DOES NOT EXIST"
-            fi
-        continueOnError: true
-
 # Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
       - task: CmdLine@2
         displayName: 'Run SCA - Trivy Filesystem Scan'
@@ -301,21 +263,6 @@ stages:
               --format json \
               --output /reports/trivy-report.json \
               /scan || true
-        continueOnError: true
-
-# Tarea: Generar reporte HTML de Trivy para visibilidad
-      - task: CmdLine@2
-        displayName: 'Generate Trivy HTML Report'
-        inputs:
-          script: |
-            docker run --rm \
-              -v $(Build.ArtifactStagingDirectory):/reports:rw \
-              aquasec/trivy:latest image \
-              --exit-code 0 \
-              --severity HIGH,CRITICAL \
-              --format sarif \
-              --output /reports/trivy-report.sarif \
-              aquasec/trivy:latest || true
         continueOnError: true
 
 # Tarea: Publicar reportes de Trivy como artefactos
@@ -349,12 +296,6 @@ stages:
           ArtifactName: 'Static Analysis (SAST)'
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/static-analysis'
         condition: succeededOrFailed()
-
-# Tarea: Publicar resultados de SAST como resultados de tests para visibilidad en Azure DevOps
-      - task: CmdLine@2
-        displayName: 'Check Disk Space'
-        inputs:
-          script: 'df -h'
 
 # ----------------------------------------------------------------
 # ETAPA 4: Docker & Artifact Management
