@@ -465,9 +465,9 @@ stages:
           kubectl delete deployment calculadora-back -n $(K8S_NAMESPACE) --ignore-not-found=true
       continueOnError: true
 
-    # Tarea: Desplegar con Helm
+    # Tarea: Desplegar con Helm (sin esperar a que esté ready)
     - task: AzureCLI@2
-      displayName: 'Tarea: Helm - Actualizar/Instalar Release'
+      displayName: 'Tarea: Helm - Instalar Release'
       inputs:
         azureSubscription: 'sc-majo-terraform-v2'
         scriptType: 'bash'
@@ -480,8 +480,10 @@ stages:
             --set "image.repository=$(ACR_NAME).azurecr.io/calculadora" \
             --set "image.tag=$(Build.BuildId)" \
             --set "app.port=8080" \
-            --set "service.port=8080" \
-            --wait --timeout 15m
+            --set "service.port=8080"
+          
+          echo "Helm install completed, waiting 30 seconds for pod to start..."
+          sleep 30
       continueOnError: true
 
     # Tarea: Debug - Diagnosticar estado del deployment
@@ -520,4 +522,26 @@ stages:
           echo ""
           echo "=== Describe Service ==="
           kubectl describe service calculadora-service -n $(K8S_NAMESPACE) || echo "Service not found"
+      continueOnError: true
+
+    # Tarea: Debug - Obtener logs completos del container
+    - task: AzureCLI@2
+      displayName: 'Debug: Obtener logs del container'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "=== Container Logs (Todos) ==="
+          POD_NAME=$(kubectl get pods -n $(K8S_NAMESPACE) -l app=calculadora-back -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+          if [ ! -z "$POD_NAME" ]; then
+            echo "Obteniendo logs de: $POD_NAME"
+            kubectl logs -n $(K8S_NAMESPACE) $POD_NAME --all-containers=true 2>&1
+          else
+            echo "No pods found"
+          fi
+          
+          echo ""
+          echo "=== Container Events Detail ==="
+          kubectl get events -n $(K8S_NAMESPACE) -o json | jq -r '.items[] | select(.involvedObject.kind=="Pod") | "\(.reason): \(.message)"' 2>/dev/null || kubectl get events -n $(K8S_NAMESPACE)
       continueOnError: true
