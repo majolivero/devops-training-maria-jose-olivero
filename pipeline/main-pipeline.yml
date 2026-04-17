@@ -254,28 +254,32 @@ stages:
         displayName: 'Prepare JAR files for scanning'
         inputs:
           script: |
-            echo "=== Checking System Artifact Directories ==="
-            echo "System.ArtifactsDirectory: $(System.ArtifactsDirectory)"
-            echo "Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)"
+            echo "=== System Directories ==="
+            ARTIFACTS_DIR=$(System.ArtifactsDirectory)
+            echo "ARTIFACTS_DIR=$ARTIFACTS_DIR"
             
             echo ""
-            echo "=== Contents of $(System.ArtifactsDirectory) ==="
-            ls -lh $(System.ArtifactsDirectory)
+            echo "=== Contents of artifacts directory ==="
+            ls -lh "$ARTIFACTS_DIR"
             
             echo ""
-            echo "=== Searching for all JAR files recursively ==="
-            find $(System.ArtifactsDirectory) -name "*.jar" -type f
+            echo "=== Creating scan directory ==="
+            mkdir -p "$ARTIFACTS_DIR/scan"
             
             echo ""
-            echo "=== Creating scan directory and copying JARs ==="
-            mkdir -p $(System.ArtifactsDirectory)/scan
-            find $(System.ArtifactsDirectory) -maxdepth 1 -name "*.jar" -type f -exec cp {} $(System.ArtifactsDirectory)/scan/ \;
+            echo "=== Copying JAR file ==="
+            if [ -f "$ARTIFACTS_DIR/app.jar" ]; then
+              echo "Found app.jar, copying..."
+              cp "$ARTIFACTS_DIR/app.jar" "$ARTIFACTS_DIR/scan/"
+              echo "Copy completed"
+            else
+              echo "app.jar not found"
+            fi
             
             echo ""
-            echo "=== Contents of $(System.ArtifactsDirectory)/scan after copy ==="
-            ls -lh $(System.ArtifactsDirectory)/scan/
-            echo "Total files in scan:"
-            find $(System.ArtifactsDirectory)/scan -type f | wc -l
+            echo "=== Verifying copy ==="
+            ls -lh "$ARTIFACTS_DIR/scan/"
+            file "$ARTIFACTS_DIR/scan/app.jar" || echo "File not readable"
         continueOnError: true
 
 # Tarea: Debug - Verificar que los archivos existen antes de Trivy
