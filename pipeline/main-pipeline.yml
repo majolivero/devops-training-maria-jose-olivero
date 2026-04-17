@@ -435,5 +435,43 @@ stages:
             --set "image.tag=$(Build.BuildId)" \
             --set "app.port=8080" \
             --set "service.port=8080" \
-            --wait --timeout 10m
+            --wait --timeout 15m
+      continueOnError: true
+
+    # Tarea: Debug - Diagnosticar estado del deployment
+    - task: AzureCLI@2
+      displayName: 'Debug: Diagnosticar estado del Deployment'
+      inputs:
+        azureSubscription: 'sc-majo-terraform-v2'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n $(K8S_NAMESPACE) -o wide
+          
+          echo ""
+          echo "=== Deployment Status ==="
+          kubectl get deployment -n $(K8S_NAMESPACE)
+          
+          echo ""
+          echo "=== Describe Deployment ==="
+          kubectl describe deployment calculadora-back -n $(K8S_NAMESPACE) || echo "Deployment not found"
+          
+          echo ""
+          echo "=== Pod Logs (últimas 50 líneas) ==="
+          POD_NAME=$(kubectl get pods -n $(K8S_NAMESPACE) -l app=calculadora-back -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+          if [ ! -z "$POD_NAME" ]; then
+            echo "Pod encontrado: $POD_NAME"
+            kubectl logs -n $(K8S_NAMESPACE) $POD_NAME --tail=50 || echo "No logs available"
+          else
+            echo "No pods found with label app=calculadora-back"
+          fi
+          
+          echo ""
+          echo "=== Events del Namespace ==="
+          kubectl get events -n $(K8S_NAMESPACE) --sort-by='.lastTimestamp' | tail -20
+          
+          echo ""
+          echo "=== Describe Service ==="
+          kubectl describe service calculadora-service -n $(K8S_NAMESPACE) || echo "Service not found"
       continueOnError: true
