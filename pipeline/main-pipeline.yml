@@ -259,19 +259,17 @@ stages:
             echo "Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)"
             
             echo ""
-            echo "=== Contents of $(System.ArtifactsDirectory)/drop ==="
-            if [ -d "$(System.ArtifactsDirectory)/drop" ]; then
-              find "$(System.ArtifactsDirectory)/drop" -type f | head -20
-              ls -lhR "$(System.ArtifactsDirectory)/drop" | head -50
-            else
-              echo "DROP directory does not exist"
-            fi
+            echo "=== Contents of $(System.ArtifactsDirectory) ==="
+            ls -lh $(System.ArtifactsDirectory)
+            
+            echo ""
+            echo "=== Searching for all JAR files recursively ==="
+            find $(System.ArtifactsDirectory) -name "*.jar" -type f
             
             echo ""
             echo "=== Creating scan directory and copying JARs ==="
             mkdir -p $(System.ArtifactsDirectory)/scan
-            find $(System.ArtifactsDirectory)/drop -name "*.jar" -type f -exec ls -lh {} \;
-            find $(System.ArtifactsDirectory)/drop -name "*.jar" -type f -exec cp {} $(System.ArtifactsDirectory)/scan/ \;
+            find $(System.ArtifactsDirectory) -maxdepth 1 -name "*.jar" -type f -exec cp {} $(System.ArtifactsDirectory)/scan/ \;
             
             echo ""
             echo "=== Contents of $(System.ArtifactsDirectory)/scan after copy ==="
