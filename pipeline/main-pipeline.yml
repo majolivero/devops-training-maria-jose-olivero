@@ -260,11 +260,18 @@ stages:
       #   continueOnError: true
 
 
-      # Debug: Verificar configuración de modo offline
+      # Debug: Verificar que la API Key se inyecta correctamente
       - script: |
-          echo "##[section] Running OWASP Dependency Check in OFFLINE mode"
-          echo "##[section] Using local vulnerability database"
-        displayName: 'Debug: OWASP Offline Mode'
+          if [ -z "$(NVD_API_KEY)" ]; then
+            echo "##[error] NVD_API_KEY variable is EMPTY or NOT SET"
+          else
+            KEY_LENGTH=$(echo -n '$(NVD_API_KEY)' | wc -c)
+            echo "##[section] NVD_API_KEY is SET (length: $KEY_LENGTH characters)"
+            # Mostrar primeros y últimos caracteres (sin revelar la key completa)
+            KEY='$(NVD_API_KEY)'
+            echo "##[section] First 4 chars: ${KEY:0:4}... and Last 4 chars: ...${KEY: -4}"
+          fi
+        displayName: 'Debug: Validate NVD_API_KEY'
 
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
@@ -273,9 +280,8 @@ stages:
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
-          # Sin API key: OWASP descargará la BD de forma abierta
-          # No usamos --noupdate para permitir descarga inicial de BD en primera ejecución
-          additionalArguments: ''
+          # API Key con delay para evitar throttling en CI
+          additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 10000'
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
