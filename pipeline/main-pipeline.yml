@@ -270,6 +270,8 @@ stages:
             # Mostrar primeros y últimos caracteres (sin revelar la key completa)
             KEY='$(NVD_API_KEY)'
             echo "##[section] First 4 chars: ${KEY:0:4}... and Last 4 chars: ...${KEY: -4}"
+            echo "Este es el api-key"
+            echo $(NVD_API_KEY)
           fi
         displayName: 'Debug: Validate NVD_API_KEY'
 
