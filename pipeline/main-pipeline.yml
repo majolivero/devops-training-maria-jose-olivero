@@ -267,14 +267,15 @@ stages:
         displayName: 'Debug: OWASP Offline Mode'
 
       - task: dependency-check-build-task@6
-        displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
+        displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
-          # Modo offline: -n (--noupdate) usa base de datos local sin intentar actualizar desde NVD
-          additionalArguments: '-n'
+          # Sin API key: OWASP descargará la BD de forma abierta
+          # No usamos --noupdate para permitir descarga inicial de BD en primera ejecución
+          additionalArguments: ''
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
