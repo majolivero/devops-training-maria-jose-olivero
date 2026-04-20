@@ -273,8 +273,8 @@ stages:
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
-          # Modo offline: no intenta conectar a NVD, usa base de datos local
-          additionalArguments: '--disableNvdCheck'
+          # Modo offline: -n (--noupdate) usa base de datos local sin intentar actualizar desde NVD
+          additionalArguments: '-n'
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
