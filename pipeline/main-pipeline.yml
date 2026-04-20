@@ -281,7 +281,11 @@ stages:
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
           # Incrementar delay a 30 segundos para evitar throttling agresivo
-          additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 30000'
+          #additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 30000'
+          additionalArguments: >
+            --nvdApiKey $(NVD_API_KEY)
+            --nvdApiDelay 30000
+            --nvdMaxRetryCount 10
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
