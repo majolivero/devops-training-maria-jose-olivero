@@ -258,8 +258,10 @@ stages:
       #       mkdir -p "$ARTIFACTS_DIR/scan"
       #       cp "$ARTIFACTS_DIR/app.jar" "$ARTIFACTS_DIR/scan/" 2>/dev/null || true
       #   continueOnError: true
+
+
       - task: dependency-check-build-task@6
-        displayName: 'Run SCA'
+        displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)/**'
@@ -268,27 +270,12 @@ stages:
           # Se añade la API Key mediante argumentos adicionales
           additionalArguments: '--nvdApiKey $(NVD_API_KEY)'
         continueOnError: true
-# Tarea: Ejecutar Trivy para análisis de composición de software (SCA)
-      - task: CmdLine@2
-        displayName: 'Run SCA - Trivy Filesystem Scan'
-        inputs:
-          script: |
-            docker run --rm \
-              -v $(System.ArtifactsDirectory)/scan:/scan:ro \
-              -v $(Build.ArtifactStagingDirectory):/reports:rw \
-              aquasec/trivy:latest filesystem \
-              --exit-code 0 \
-              --severity HIGH,CRITICAL \
-              --format json \
-              --output /reports/trivy-report.json \
-              /scan || true
-        continueOnError: true
 
-# Tarea: Publicar reportes de Trivy como artefactos
+# Tarea: Publicar reportes de OWASP como artefactos
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish Trivy SCA Report'
+        displayName: 'Publish SCA Report (OWASP Dependency Check)'
         inputs:
-          ArtifactName: 'SCA Analysis Report (Trivy)'
+          ArtifactName: 'SCA Analysis Report (OWASP)'
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         condition: succeededOrFailed()
 
