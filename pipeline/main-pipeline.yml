@@ -260,28 +260,21 @@ stages:
       #   continueOnError: true
 
 
-      # Debug: Verificar que la API Key se inyecta correctamente
+      # Debug: Verificar configuración de modo offline
       - script: |
-          if [ -z "$(NVD_API_KEY)" ]; then
-            echo "##[error] NVD_API_KEY variable is EMPTY or NOT SET"
-          else
-            KEY_LENGTH=$(echo -n '$(NVD_API_KEY)' | wc -c)
-            echo "##[section] NVD_API_KEY is SET (length: $KEY_LENGTH characters)"
-            # Mostrar primeros y últimos caracteres (sin revelar la key completa)
-            KEY='$(NVD_API_KEY)'
-            echo "##[section] First 4 chars: ${KEY:0:4}... and Last 4 chars: ...${KEY: -4}"
-          fi
-        displayName: 'Debug: Validate NVD_API_KEY'
+          echo "##[section] Running OWASP Dependency Check in OFFLINE mode"
+          echo "##[section] Using local vulnerability database"
+        displayName: 'Debug: OWASP Offline Mode'
 
       - task: dependency-check-build-task@6
-        displayName: 'Run SCA - OWASP Dependency Check'
+        displayName: 'Run SCA - OWASP Dependency Check (Offline Mode)'
         inputs:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
-          # Aumentar delay a 20 segundos (20000ms) entre requests para evitar throttling
-          additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 20000'
+          # Modo offline: no intenta conectar a NVD, usa base de datos local
+          additionalArguments: '--disableNvdCheck'
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
