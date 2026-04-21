@@ -91,6 +91,7 @@ stages:
       inputs:
         useConfigFile: true
         configFilePath: '$(System.DefaultWorkingDirectory)/GitVersion.yml'  #Asegurarse de que la ruta al archivo GitVersion.yml sea correcta. Si el archivo está en la raíz del repositorio, esta ruta es adecuada. Si está en una subcarpeta, ajusta la ruta en consecuencia.
+        additionalArguments: '/overrideconfig mode=ContinuousDeployment'
         targetPath: '$(Build.SourcesDirectory)'
 
 # ----------------------------------------------------------------
@@ -375,7 +376,7 @@ stages:
         PathtoPublish: '$(System.DefaultWorkingDirectory)/grype-contribs'
 
 # ----------------------------------------------------------------
-# ETAPA 4: Kubernetes Deployment
+# ETAPA 5: Kubernetes Deployment
 # ----------------------------------------------------------------
 - stage: KubernetesDeployment
   displayName: 'Ecosystem Integration'

@@ -8,13 +8,11 @@ major-version-bump-message: '^break:|^breaking:'
 minor-version-bump-message: '^feat:'
 patch-version-bump-message: '^fix:'
 
-# CONFIGURACIÓN DE RAMAS
 branches:
   master:
+    regex: ^master$|^main$  # Por si acaso cambia de nombre
     mode: ContinuousDeployment
-    tag: '' # Al dejarlo vacío, eliminamos el "-ci" o "-alpha"
+    tag: ''                 # Esto quita el -ci
     increment: Patch
     prevent-incremental-version: false
     track-merge-target: false
-    regex: ^master$
-    source-branches: []
