@@ -7,6 +7,14 @@ commit-message-incrementing: Enabled
 major-version-bump-message: '^break:|^breaking:'
 minor-version-bump-message: '^feat:'
 patch-version-bump-message: '^fix:'
-legacy-semver-padding: 4
-build-metadata-padding: 4
-commits-since-version-source-padding: 4
+
+# CONFIGURACIÓN DE RAMAS
+branches:
+  master:
+    mode: ContinuousDeployment
+    tag: '' # Al dejarlo vacío, eliminamos el "-ci" o "-alpha"
+    increment: Patch
+    prevent-incremental-version: false
+    track-merge-target: false
+    regex: ^master$
+    source-branches: []
