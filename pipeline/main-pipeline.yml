@@ -280,6 +280,10 @@ stages:
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
           dependencyCheckVersion: '9.0.9'
+          #Esto elimina el flag --noupdate, lo que permite que Dependency Check actualice su base de datos de vulnerabilidades antes de escanear, asegurando que se detecten las vulnerabilidades más recientes. Sin embargo, esto también puede aumentar el tiempo de ejecución del análisis, especialmente si la base de datos no se ha actualizado recientemente.
+          skiupdate: false
+          # Opcional: Define una ruta específica para la base de datos
+          #dataDirectory: '$(Pipeline.Workspace)/dependency-check-data'
           # Incrementar delay a 30 segundos para evitar throttling agresivo
           #additionalArguments: '--nvdApiKey $(NVD_API_KEY) --nvdApiDelay 30000'
           additionalArguments: >
