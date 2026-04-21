@@ -281,14 +281,13 @@ stages:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)/src'
           format: 'ALL'
-          dependencyCheckVersion: '9.0.9'
+          dependencyCheckVersion: '12.1.0'
           # Corrección: Nombre exacto del parámetro y valor en false
           skipUpdate: false
           additionalArguments: >
             --nvdApiKey $(NVD_API_KEY)
-            --nvdApiDelay 20000
-            --nvdMaxRetryCount 20
-            --nvdDatafeed https://jeremylong.github.io/DependencyCheck/merged_v2.json.gz
+            --nvdApiDelay 16000
+            --nvdMaxRetryCount 10
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
