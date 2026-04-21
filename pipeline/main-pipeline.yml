@@ -288,6 +288,7 @@ stages:
             --nvdApiKey $(NVD_API_KEY)
             --nvdApiDelay 20000
             --nvdMaxRetryCount 20
+            --nvdDatafeed https://jeremylong.github.io/DependencyCheck/merged_v2.json.gz
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
