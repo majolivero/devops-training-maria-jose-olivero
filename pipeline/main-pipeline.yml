@@ -270,7 +270,7 @@ stages:
         displayName: 'Publish SCA Report (OWASP Dependency Check)'
         inputs:
           ArtifactName: 'SCA Analysis Report (OWASP)'
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/sca-report'
         condition: succeededOrFailed()
 
   - job: StaticApplicationSecurityTesting
