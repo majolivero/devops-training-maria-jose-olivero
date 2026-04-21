@@ -8,11 +8,12 @@ major-version-bump-message: '^break:|^breaking:'
 minor-version-bump-message: '^feat:'
 patch-version-bump-message: '^fix:'
 
+# CONFIGURACIÓN DE RAMAS (Formato v6)
 branches:
   master:
-    regex: ^master$|^main$  # Por si acaso cambia de nombre
     mode: ContinuousDeployment
-    tag: ''                 # Esto quita el -ci
+    label: '' # <--- ANTES ERA 'tag'. Al dejarlo vacío quita el "-ci"
     increment: Patch
     prevent-incremental-version: false
     track-merge-target: false
+    regex: ^master$|^main$
