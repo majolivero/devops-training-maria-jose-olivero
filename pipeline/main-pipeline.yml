@@ -372,7 +372,7 @@ stages:
       displayName: 'Publish HTML Report'
       inputs:
         ArtifactName: 'grype-results'
-        PathtoPublish: '$(System.DefaultWorkingDirectory)/grype-contribs/results.html'
+        PathtoPublish: '$(System.DefaultWorkingDirectory)/grype-contribs'
 
 # ----------------------------------------------------------------
 # ETAPA 4: Kubernetes Deployment
