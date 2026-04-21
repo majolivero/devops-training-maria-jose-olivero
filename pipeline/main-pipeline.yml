@@ -234,6 +234,7 @@ stages:
   jobs:
   - job: SoftwareCompositionAnalysis
     displayName: 'Software Composition Analysis (SCA)'
+    timeoutInMinutes: 120
     pool:
       name: 'Azure Pipelines'
       vmImage: 'ubuntu-24.04'
@@ -248,32 +249,6 @@ stages:
           buildType: 'current'
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
-
-# Tarea: Preparar estructura de carpetas para Trivy con los JAR descargados
-      # - task: CmdLine@2
-      #   displayName: 'Prepare JAR files for scanning'
-      #   inputs:
-      #     script: |
-      #       ARTIFACTS_DIR=$(System.ArtifactsDirectory)
-      #       mkdir -p "$ARTIFACTS_DIR/scan"
-      #       cp "$ARTIFACTS_DIR/app.jar" "$ARTIFACTS_DIR/scan/" 2>/dev/null || true
-      #   continueOnError: true
-
-
-      # Debug: Verificar que la API Key se inyecta correctamente
-      - script: |
-          if [ -z "$(NVD_API_KEY)" ]; then
-            echo "##[error] NVD_API_KEY variable is EMPTY or NOT SET"
-          else
-            KEY_LENGTH=$(echo -n '$(NVD_API_KEY)' | wc -c)
-            echo "##[section] NVD_API_KEY is SET (length: $KEY_LENGTH characters)"
-            # Mostrar primeros y últimos caracteres (sin revelar la key completa)
-            KEY='$(NVD_API_KEY)'
-            echo "##[section] First 4 chars: ${KEY:0:4}... and Last 4 chars: ...${KEY: -4}"
-            echo "Este es el api-key"
-            echo $(NVD_API_KEY)
-          fi
-        displayName: 'Debug: Validate NVD_API_KEY'
 
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
