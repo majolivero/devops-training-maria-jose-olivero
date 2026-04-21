@@ -347,6 +347,33 @@ stages:
           docker push $(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId)
           docker push $(ACR_NAME).azurecr.io/calculadora:latest
 
+    # Tarea: Ejecutar análisis de seguridad con grype y generar reportes (Security in Infrastructure as Code - SIaC)
+    - task: CmdLine@2
+      displayName: "Security in Infrastructure as Code (SIaC)"
+      inputs:
+        script: |
+          git clone https://github.com/opt-nc/grype-contribs.git
+          cd grype-contribs
+          export IMAGE=$(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId)
+          echo "☝︝ About to analyze $IMAGE with grype ❕"
+          docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume $(System.DefaultWorkingDirectory)/grype-contribs/tmpl:/tmpl --name Grype anchore/grype:latest $(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId) -o template -t /tmpl/csv-vulnerability_id-severity-no-headers.tmpl > work/analysis.csv
+          echo "✅ grype analysis done."
+          docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume $(System.DefaultWorkingDirectory)/grype-contribs/tmpl:/tmpl --name Grype anchore/grype:latest $(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId)
+          echo "$(tail -n +2 work/analysis.csv)" > work/analysis.csv
+          echo "--------------------------------------------------------------------------------------"
+          echo "➕ Aggregating data:"
+          awk -F, '{a[$1]+=$2;}END{for(i in a)print i", "a[i];}' work/analysis.csv > work/analysis-aggregated.csv
+          cat work/analysis-aggregated.csv
+          docker run --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume $(System.DefaultWorkingDirectory)/grype-contribs/tmpl:/tmpl --name Grype anchore/grype:latest $(ACR_NAME).azurecr.io/calculadora:$(Build.BuildId) -o template -t /tmpl/html-table.tmpl > results.html
+      continueOnError: true
+
+    # Tarea: Publicar reportes de grype como artefactos para visibilidad en Azure DevOps
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish HTML Report'
+      inputs:
+        ArtifactName: 'grype-results'
+        PathtoPublish: '$(System.DefaultWorkingDirectory)/grype-contribs/results.html'
+
 # ----------------------------------------------------------------
 # ETAPA 4: Kubernetes Deployment
 # ----------------------------------------------------------------
