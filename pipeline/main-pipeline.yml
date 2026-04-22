@@ -103,14 +103,6 @@ stages:
     # Pasos (Steps) que se ejecutan en este trabajo
     steps:
     
-    # Tarea: Instalar Java 17 (requerido para Gradle)
-    - task: JavaToolInstaller@0
-      displayName: 'Tarea: Java Tool Installer - Setup JDK 17'
-      inputs:
-        versionSpec: '17'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'default'
-    
     # Tarea: Ejecutar Gradle para compilar y probar
     - task: Gradle@3
       displayName: 'Tarea: Gradle - Compilar, Test y Build'
