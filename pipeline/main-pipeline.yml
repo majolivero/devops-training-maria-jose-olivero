@@ -263,6 +263,7 @@ stages:
             --nvdApiKey $(NVD_API_KEY)
             --nvdApiDelay 16000
             --nvdMaxRetryCount 10
+            --out $(Build.ArtifactStagingDirectory)
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
@@ -270,7 +271,7 @@ stages:
         displayName: 'Publish SCA Report (OWASP Dependency Check)'
         inputs:
           ArtifactName: 'SCA Analysis Report (OWASP)'
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/dependency-check-report'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         condition: succeededOrFailed()
 
   - job: StaticApplicationSecurityTesting
