@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.apache.logging.log4j:log4j-core:2.14.1'  // CVE-2021-44228 (Log4Shell) - Vulnerable for testing
+	implementation 'org.apache.logging.log4j:log4j-core:2.4.1'  // CVE-2015-4731, CVE-2015-5254 - Vulnerable for testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
