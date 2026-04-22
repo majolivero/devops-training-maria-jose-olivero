@@ -109,7 +109,7 @@ stages:
       inputs:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
+        jdkSourceOption: 'default'
     
     # Tarea: Ejecutar Gradle para compilar y probar
     - task: Gradle@3
