@@ -258,7 +258,7 @@ stages:
         displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
           projectName: 'OWASP Dependency Check'
-          scanPath: '$(System.DefaultWorkingDirectory)/src'
+          scanPath: '$(System.DefaultWorkingDirectory)'
           format: 'ALL'
           dependencyCheckVersion: '12.1.0'
           # Corrección: Nombre exacto del parámetro y valor en false
