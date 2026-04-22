@@ -2,8 +2,7 @@
 trigger: none
 
 pool:
-  vmImage: 'ubuntu-latest'
-  demands: java
+  name: 'Agent-Majo'
 
 variables:
   # Todas las variables están centralizadas en el grupo de la librería de Azure DevOps
@@ -32,8 +31,7 @@ stages:
   - job: SemanticVersionJob
     displayName: 'Semantic Version'
     pool:
-      name: 'Azure Pipelines'  #Elige el grupo de servidores de Azure Pipelines
-      vmImage: 'ubuntu-latest' #Imagen de máquina virtual con Java preinstalado
+      name: 'Agent-Majo'
     steps:
     - checkout: self   #Realiza un checkout del código fuente del repositorio actual
       fetchDepth: 0  #Obtener todo el historial de commits y tags (necesario para que GitVersion pueda calcular correctamente la versión semántica)
@@ -236,8 +234,7 @@ stages:
     displayName: 'Software Composition Analysis (SCA)'
     timeoutInMinutes: 120
     pool:
-      name: 'Azure Pipelines'
-      vmImage: 'ubuntu-24.04'
+      name: 'Agent-Majo'
     steps:
       - checkout: self
         fetchDepth: 0
@@ -277,8 +274,7 @@ stages:
   - job: StaticApplicationSecurityTesting
     displayName: 'Static Application Security Testing (SAST)'
     pool:
-      name: 'Azure Pipelines'
-      vmImage: 'ubuntu-24.04'
+      name: 'Agent-Majo'
     steps:
       - checkout: self
         fetchDepth: 1
