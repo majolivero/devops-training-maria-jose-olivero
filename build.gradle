@@ -15,12 +15,18 @@ repositories {
 	mavenCentral()
 }
 
+configurations.all {
+	resolutionStrategy {
+		force 'org.apache.logging.log4j:log4j-core:2.4.1'
+		force 'org.apache.logging.log4j:log4j-api:2.4.1'
+	}
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	// Excluir las versiones seguras de Log4j de Spring Boot
+	// Excluir log4j-to-slf4j que trae versiones más nuevas de Log4j
 	implementation('org.springframework.boot:spring-boot-starter-web') {
-		exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
-		exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+		exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
 	}
 	// Incluir versión vulnerable de Log4j para testing
 	implementation 'org.apache.logging.log4j:log4j-core:2.4.1'
