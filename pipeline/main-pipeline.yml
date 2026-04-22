@@ -103,6 +103,13 @@ stages:
     # Pasos (Steps) que se ejecutan en este trabajo
     steps:
     
+    # Tarea: Establecer variables de entorno para Java
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME_17_X64]/usr/lib/jvm/java-17-openjdk-amd64"
+        echo "##vso[task.setvariable variable=JAVA_HOME]/usr/lib/jvm/java-17-openjdk-amd64"
+      displayName: 'Tarea: Configurar variables de entorno JAVA'
+      condition: eq(variables['Agent.OS'], 'Linux')
+    
     # Tarea: Ejecutar Gradle para compilar y probar
     - task: Gradle@3
       displayName: 'Tarea: Gradle - Compilar, Test y Build'
