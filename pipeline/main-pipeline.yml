@@ -262,11 +262,12 @@ stages:
           format: 'ALL'
           dependencyCheckVersion: '12.1.0'
           # Usar caché local sin actualizar NVD continuamente
-          skipUpdate: true
+          skipUpdate: false
           additionalArguments: >
             --nvdApiKey $(NVD_API_KEY)
-            --nvdApiDelay 20000
-            --nvdMaxRetryCount 15
+            --nvdApiDelay 45000
+            --nvdMaxRetryCount 25
+            --nvdMaxAPICalls 10000
             --out $(Build.ArtifactStagingDirectory)
         continueOnError: true
 
