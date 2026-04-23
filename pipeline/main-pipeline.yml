@@ -320,7 +320,7 @@ stages:
         condition: always()
         inputs:
           script: |
-            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
+            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory)/static-analysis 2>/dev/null || true
             echo "Permissions fixed for next run"
         continueOnError: true
 
