@@ -246,15 +246,6 @@ stages:
       - checkout: self
         fetchDepth: 0
 
-      - task: CmdLine@2
-        displayName: 'Clean workspace permissions'
-        inputs:
-          script: |
-            chmod -R 755 $(Build.ArtifactStagingDirectory) 2>/dev/null || true
-            rm -rf $(Build.ArtifactStagingDirectory)/* 2>/dev/null || true
-            echo "Workspace cleaned successfully"
-        continueOnError: true
-
 # Tarea: Descargar artefactos de la etapa de build para escanear dependencias
       - task: DownloadPipelineArtifact@2
         displayName: 'Download Build Artifact'
@@ -309,15 +300,6 @@ stages:
       - checkout: self
         fetchDepth: 1
 
-      - task: CmdLine@2
-        displayName: 'Clean workspace permissions'
-        inputs:
-          script: |
-            chmod -R 755 $(Build.ArtifactStagingDirectory) 2>/dev/null || true
-            rm -rf $(Build.ArtifactStagingDirectory)/static-analysis 2>/dev/null || true
-            echo "Workspace cleaned successfully"
-        continueOnError: true
-
 # Tarea: Ejecutar ShiftLeft SAST Scan para análisis de seguridad estático
       - task: CmdLine@2
         displayName: 'Run SAST - ShiftLeft Scan'
@@ -332,6 +314,15 @@ stages:
           ArtifactName: 'Static Analysis (SAST)'
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/static-analysis'
         condition: succeededOrFailed()
+
+      - task: CmdLine@2
+        displayName: 'Fix permissions after Docker run'
+        condition: always()
+        inputs:
+          script: |
+            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
+            echo "Permissions fixed for next run"
+        continueOnError: true
 
 # ----------------------------------------------------------------
 # ETAPA 4: Docker & Artifact Management
