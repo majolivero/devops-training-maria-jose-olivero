@@ -15,28 +15,8 @@ repositories {
 	mavenCentral()
 }
 
-configurations.all {
-	exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
-	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
-	resolutionStrategy {
-		force 'org.apache.logging.log4j:log4j-core:2.4.1'
-		force 'org.apache.logging.log4j:log4j-api:2.4.1'
-	}
-}
-
 dependencies {
-	// Spring Boot web sin logging
-	implementation('org.springframework.boot:spring-boot-starter-web') {
-		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
-		exclude group: 'org.apache.logging.log4j'
-	}
-	
-	// Forzar Log4j 2.4.1 como única implementación
-	implementation 'org.apache.logging.log4j:log4j-core:2.4.1'
-	implementation 'org.apache.logging.log4j:log4j-api:2.4.1'
-	implementation 'org.apache.logging.log4j:log4j-jcl:2.4.1'
-	implementation 'org.apache.logging.log4j:log4j-jul:2.4.1'
-	
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
