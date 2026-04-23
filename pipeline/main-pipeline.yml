@@ -246,20 +246,14 @@ stages:
       - checkout: self
         fetchDepth: 0
 
-# Tarea: Descargar artefactos de la etapa de build para escanear dependencias
-      - task: DownloadPipelineArtifact@2
-        displayName: 'Download Build Artifact'
-        inputs:
-          buildType: 'current'
-          artifactName: 'drop'
-          downloadPath: '$(System.ArtifactsDirectory)'
-
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)'
-          format: 'ALL'
+          format: 'HTML, JSON' # Formatos más comunes
+          # FORZAMOS LA SALIDA AL STAGING DIRECTORY
+          reportsDirectory: '$(Build.ArtifactStagingDirectory)/sca-reports'
           dependencyCheckVersion: '12.1.0'
           skipUpdate: false
           additionalArguments: >
@@ -268,28 +262,12 @@ stages:
             --nvdMaxRetryCount 25
         continueOnError: true
 
-      - task: CmdLine@2
-        displayName: 'Validate SCA Result'
-        condition: succeededOrFailed()
-        inputs:
-          script: |
-            echo "Dependency Check finalizado. Verificando reportes..."
-            REPORT_DIR="$(Build.ArtifactStagingDirectory)"
-            
-            if ls $REPORT_DIR/dependency-check-report.* 1> /dev/null 2>&1; then
-              echo "✓ Reportes generados correctamente"
-              exit 0
-            else
-              echo "⚠ No se encontraron reportes - verificar logs"
-              exit 0
-            fi
-
-# Tarea: Publicar reportes de OWASP como artefactos
+      # Publicar directamente desde la carpeta donde le dijimos que guardara
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish SCA Report (OWASP Dependency Check)'
+        displayName: 'Publish SCA Report'
         inputs:
-          ArtifactName: 'SCA Analysis Report (OWASP)'
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'SCA_Analysis_Report'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/sca-reports'
         condition: succeededOrFailed()
 
   - job: StaticApplicationSecurityTesting
@@ -300,29 +278,24 @@ stages:
       - checkout: self
         fetchDepth: 1
 
-# Tarea: Ejecutar ShiftLeft SAST Scan para análisis de seguridad estático
       - task: CmdLine@2
         displayName: 'Run SAST - ShiftLeft Scan'
         inputs:
-          script: docker run --user $(id -u):$(id -g) -v "$(Build.SourcesDirectory):/app:cached" -v "$(Build.ArtifactStagingDirectory):/reports:cached" shiftleft/sast-scan scan --src /app --out_dir /reports/static-analysis || true
-        continueOnError: true
-
-# Tarea: Publicar reportes de SAST como artefactos para visibilidad en Azure DevOps
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish SAST Analysis Report'
-        inputs:
-          ArtifactName: 'Static Analysis (SAST)'
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)/static-analysis'
-        condition: succeededOrFailed()
-
-      - task: CmdLine@2
-        displayName: 'Fix permissions after Docker run'
-        condition: always()
-        inputs:
+      # Simplificamos la ruta de salida para evitar problemas de permisos complejos
           script: |
-            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory)/static-analysis 2>/dev/null || true
-            echo "Permissions fixed for next run"
+            mkdir -p $(Build.ArtifactStagingDirectory)/sast-analysis
+            docker run --rm --user $(id -u):$(id -g) \
+              -v "$(Build.SourcesDirectory):/app" \
+              -v "$(Build.ArtifactStagingDirectory)/sast-analysis:/reports" \
+              shiftleft/sast-scan scan --src /app --out_dir /reports
         continueOnError: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish SAST Report'
+        inputs:
+          ArtifactName: 'SAST_Analysis_Report'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/sast-analysis'
+        condition: succeededOrFailed()
 
 # ----------------------------------------------------------------
 # ETAPA 4: Docker & Artifact Management
