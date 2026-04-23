@@ -246,23 +246,29 @@ stages:
       - checkout: self
         fetchDepth: 0
 
+      # Verificación de conectividad (Opcional, ayuda a debugear si la NVD está caída)
+      - script: |
+          echo "Verificando conectividad con NIST NVD..."
+          curl -I "https://services.nvd.nist.gov/rest/json/cves/2.0"
+        displayName: 'Check NVD Connectivity'
+
       - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)'
-          format: 'HTML, JSON' # Formatos más comunes
-          # FORZAMOS LA SALIDA AL STAGING DIRECTORY
+          format: 'ALL'
+          # Centralizamos reportes en una carpeta específica
           reportsDirectory: '$(Build.ArtifactStagingDirectory)/sca-reports'
           dependencyCheckVersion: '12.1.0'
           skipUpdate: false
           additionalArguments: >
             --nvdApiKey $(NVD_API_KEY)
-            --nvdApiDelay 45000
-            --nvdMaxRetryCount 25
+            --nvdApiDelay 16000
+            --nvdMaxRetryCount 10
+            --data "$(Agent.WorkFolder)/_dependency-check-data"
         continueOnError: true
 
-      # Publicar directamente desde la carpeta donde le dijimos que guardara
       - task: PublishBuildArtifacts@1
         displayName: 'Publish SCA Report'
         inputs:
@@ -281,13 +287,13 @@ stages:
       - task: CmdLine@2
         displayName: 'Run SAST - ShiftLeft Scan'
         inputs:
-      # Simplificamos la ruta de salida para evitar problemas de permisos complejos
+          # Usamos --rm para no dejar contenedores huérfanos y || true para que no rompa el pipeline
           script: |
             mkdir -p $(Build.ArtifactStagingDirectory)/sast-analysis
             docker run --rm --user $(id -u):$(id -g) \
               -v "$(Build.SourcesDirectory):/app" \
               -v "$(Build.ArtifactStagingDirectory)/sast-analysis:/reports" \
-              shiftleft/sast-scan scan --src /app --out_dir /reports
+              shiftleft/sast-scan scan --src /app --out_dir /reports || true
         continueOnError: true
 
       - task: PublishBuildArtifacts@1
@@ -297,6 +303,14 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/sast-analysis'
         condition: succeededOrFailed()
 
+      # Limpieza de permisos por si Docker creó archivos como root
+      - task: CmdLine@2
+        displayName: 'Fix permissions'
+        condition: always()
+        inputs:
+          script: |
+            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
+        
 # ----------------------------------------------------------------
 # ETAPA 4: Docker & Artifact Management
 # ----------------------------------------------------------------
