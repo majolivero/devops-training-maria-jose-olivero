@@ -269,8 +269,8 @@ stages:
           projectName: 'OWASP Dependency Check'
           scanPath: '$(System.DefaultWorkingDirectory)'
           format: 'ALL'
+          reportDir: '$(Build.ArtifactStagingDirectory)'
           dependencyCheckVersion: '12.1.0'
-          # Usar caché local sin actualizar NVD continuamente
           skipUpdate: false
           additionalArguments: >
             --nvdApiKey $(NVD_API_KEY)
