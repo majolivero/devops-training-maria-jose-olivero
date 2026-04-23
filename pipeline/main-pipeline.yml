@@ -272,10 +272,9 @@ stages:
           dependencyCheckVersion: '12.1.0'
           skipUpdate: false
           additionalArguments: >
-            -nvdApiKey $(NVD_API_KEY)
-            -nvdApiDelay 45000
-            -nvdMaxRetryCount 25
-            -nvdMaxAPICalls 10000
+            --nvdApiKey $(NVD_API_KEY)
+            --nvdApiDelay 45000
+            --nvdMaxRetryCount 25
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
