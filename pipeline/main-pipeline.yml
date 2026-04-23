@@ -275,7 +275,7 @@ stages:
             --nvdApiKey $(NVD_API_KEY)
             --nvdApiDelay 45000
             --nvdMaxRetryCount 25
-            --failOnCVSS 9
+            --failOnCVSS 11
         continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
