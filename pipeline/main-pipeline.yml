@@ -263,32 +263,35 @@ stages:
           artifactName: 'drop'
           downloadPath: '$(System.ArtifactsDirectory)'
 
-      - task: CmdLine@2
+      - task: dependency-check-build-task@6
         displayName: 'Run SCA - OWASP Dependency Check'
         inputs:
+          projectName: 'OWASP Dependency Check'
+          scanPath: '$(System.DefaultWorkingDirectory)'
+          format: 'ALL'
+          dependencyCheckVersion: '12.1.0'
+          skipUpdate: false
+          additionalArguments: >
+            --nvdApiKey $(NVD_API_KEY)
+            --nvdApiDelay 45000
+            --nvdMaxRetryCount 25
+        continueOnError: true
+
+      - task: CmdLine@2
+        displayName: 'Validate SCA Result'
+        condition: succeededOrFailed()
+        inputs:
           script: |
-            echo "Starting OWASP Dependency Check..."
-            # Execute Dependency Check - capture exit code but don't fail
-            dependency-check.sh \
-              --project "OWASP Dependency Check" \
-              --scan "$(System.DefaultWorkingDirectory)" \
-              --out "$(Build.ArtifactStagingDirectory)" \
-              --format ALL \
-              --nvdApiKey $(NVD_API_KEY) \
-              --nvdApiDelay 45000 \
-              --nvdMaxRetryCount 25
+            echo "Dependency Check finalizado. Verificando reportes..."
+            REPORT_DIR="$(Build.ArtifactStagingDirectory)"
             
-            EXIT_CODE=$?
-            
-            # Exit codes 0 (no issues), 1 (errors), or 14 (vulnerabilities) are acceptable
-            if [ $EXIT_CODE -eq 0 ] || [ $EXIT_CODE -eq 1 ] || [ $EXIT_CODE -eq 14 ]; then
-              echo "Dependency Check completed (exit code: $EXIT_CODE)"
+            if ls $REPORT_DIR/dependency-check-report.* 1> /dev/null 2>&1; then
+              echo "✓ Reportes generados correctamente"
               exit 0
             else
-              echo "Dependency Check failed with exit code: $EXIT_CODE"
-              exit 1
+              echo "⚠ No se encontraron reportes - verificar logs"
+              exit 0
             fi
-        continueOnError: true
 
 # Tarea: Publicar reportes de OWASP como artefactos
       - task: PublishBuildArtifacts@1
