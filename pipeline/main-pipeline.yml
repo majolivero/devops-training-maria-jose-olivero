@@ -282,44 +282,44 @@ stages:
     - TerraformInfrastructure
   condition: succeeded()
   jobs:
-  - job: SoftwareCompositionAnalysis
-    displayName: 'Software Composition Analysis (SCA)'
-    timeoutInMinutes: 120
-    pool:
-      name: 'Agent-Majo'
-    steps:
-      - checkout: self
-        fetchDepth: 0
+  # - job: SoftwareCompositionAnalysis
+  #   displayName: 'Software Composition Analysis (SCA)'
+  #   timeoutInMinutes: 120
+  #   pool:
+  #     name: 'Agent-Majo'
+  #   steps:
+  #     - checkout: self
+  #       fetchDepth: 0
 
-      # Verificación de conectividad (Opcional, ayuda a debugear si la NVD está caída)
-      - script: |
-          echo "Verificando conectividad con NIST NVD..."
-          curl -I "https://services.nvd.nist.gov/rest/json/cves/2.0"
-        displayName: 'Check NVD Connectivity'
+  #     # Verificación de conectividad (Opcional, ayuda a debugear si la NVD está caída)
+  #     - script: |
+  #         echo "Verificando conectividad con NIST NVD..."
+  #         curl -I "https://services.nvd.nist.gov/rest/json/cves/2.0"
+  #       displayName: 'Check NVD Connectivity'
 
-      - task: dependency-check-build-task@6
-        displayName: 'Run SCA - OWASP Dependency Check'
-        inputs:
-          projectName: 'OWASP Dependency Check'
-          scanPath: '$(System.DefaultWorkingDirectory)'
-          format: 'ALL'
-          # Centralizamos reportes en una carpeta específica
-          reportsDirectory: '$(Build.ArtifactStagingDirectory)/sca-reports'
-          dependencyCheckVersion: '12.1.0'
-          skipUpdate: false
-          additionalArguments: >
-            --nvdApiKey $(NVD_API_KEY)
-            --nvdApiDelay 16000
-            --nvdMaxRetryCount 10
-            --data "$(Agent.WorkFolder)/_dependency-check-data"
-        continueOnError: true
+  #     - task: dependency-check-build-task@6
+  #       displayName: 'Run SCA - OWASP Dependency Check'
+  #       inputs:
+  #         projectName: 'OWASP Dependency Check'
+  #         scanPath: '$(System.DefaultWorkingDirectory)'
+  #         format: 'ALL'
+  #         # Centralizamos reportes en una carpeta específica
+  #         reportsDirectory: '$(Build.ArtifactStagingDirectory)/sca-reports'
+  #         dependencyCheckVersion: '12.1.0'
+  #         skipUpdate: false
+  #         additionalArguments: >
+  #           --nvdApiKey $(NVD_API_KEY)
+  #           --nvdApiDelay 16000
+  #           --nvdMaxRetryCount 10
+  #           --data "$(Agent.WorkFolder)/_dependency-check-data"
+  #       continueOnError: true
 
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish SCA Report'
-        inputs:
-          ArtifactName: 'SCA_Analysis_Report'
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)/sca-reports'
-        condition: succeededOrFailed()
+  #     - task: PublishBuildArtifacts@1
+  #       displayName: 'Publish SCA Report'
+  #       inputs:
+  #         ArtifactName: 'SCA_Analysis_Report'
+  #         PathtoPublish: '$(Build.ArtifactStagingDirectory)/sca-reports'
+  #       condition: succeededOrFailed()
 
   - job: StaticApplicationSecurityTesting
     displayName: 'Static Application Security Testing (SAST)'
