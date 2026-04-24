@@ -228,7 +228,52 @@ stages:
         subscription_id: $(subscription_id)
 
 # ----------------------------------------------------------------
-# ETAPA 3: Technical Excellence (SCA & SAST)
+# ETAPA 3: Compliance Testing (InSpec)
+# ----------------------------------------------------------------
+- stage: ComplianceTesting
+  displayName: 'Compliance Testing'
+  dependsOn: TerraformInfrastructure
+  condition: succeeded()
+  jobs:
+  - job: ComplianceTestJob
+    displayName: 'InSpec Compliance Test'
+    pool:
+      name: 'Agent-Majo'
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - script: |
+          export CHEF_LICENSE=accept
+          echo "##[command] inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
+          inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile
+
+          echo "##[command] inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
+            --chef-license accept-silent \
+            --reporter cli junit:backstage-inspec-test-results.xml \
+            --no-color"
+          inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
+            --chef-license accept-silent \
+            --reporter cli junit:backstage-inspec-test-results.xml \
+            --no-color | tee inspec_output.log
+
+          # Extraer el número de control failures desde la línea "Profile Summary"
+          FAILED_CONTROLS=$(grep -oP '(?<=, )\d+(?= control failure)' inspec_output.log || echo 0)
+
+          echo "Failed Controls: $FAILED_CONTROLS"
+        displayName: 'Run InSpec Compliance Tests'
+        continueOnError: true
+
+      - task: PublishTestResults@2
+        displayName: 'Publish InSpec Test Results'
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'backstage-inspec-test-results.xml'
+          testRunTitle: 'InSpec Compliance Tests'
+        condition: succeededOrFailed()
+
+# ----------------------------------------------------------------
+# ETAPA 4: Technical Excellence (SCA & SAST)
 # ----------------------------------------------------------------
 - stage: TechnicalExcellence
   displayName: 'Technical Excellence'
@@ -312,11 +357,13 @@ stages:
             sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
         
 # ----------------------------------------------------------------
-# ETAPA 4: Docker & Artifact Management
+# ETAPA 5: Docker & Artifact Management
 # ----------------------------------------------------------------
 - stage: DockerArtifactManagement
   displayName: 'Artifact Management'
-  dependsOn: TechnicalExcellence
+  dependsOn:
+    - TechnicalExcellence
+    - ComplianceTesting
   condition: succeeded()
   jobs:
   - job: DockerBuildJob
@@ -389,7 +436,7 @@ stages:
         PathtoPublish: '$(System.DefaultWorkingDirectory)/grype-contribs'
 
 # ----------------------------------------------------------------
-# ETAPA 5: Kubernetes Deployment
+# ETAPA 6: Kubernetes Deployment
 # ----------------------------------------------------------------
 - stage: KubernetesDeployment
   displayName: 'Ecosystem Integration'
