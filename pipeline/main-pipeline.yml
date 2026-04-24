@@ -254,20 +254,20 @@ stages:
 
       - script: |
           export CHEF_LICENSE=accept
+          cd $(System.DefaultWorkingDirectory)
+
           echo "##[command] inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
           inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile
 
-          echo "##[command] inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
-            --chef-license accept-silent \
-            --reporter cli junit:backstage-inspec-test-results.xml \
-            --no-color"
+          echo "##[command] inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
           inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
             --chef-license accept-silent \
-            --reporter cli junit:backstage-inspec-test-results.xml \
-            --no-color | tee inspec_output.log
+            --reporter cli \
+            "junit:$(System.DefaultWorkingDirectory)/backstage-inspec-test-results.xml" \
+            --no-color | tee $(System.DefaultWorkingDirectory)/inspec_output.log
 
           # Extraer el número de control failures desde la línea "Profile Summary"
-          FAILED_CONTROLS=$(grep -oP '(?<=, )\d+(?= control failure)' inspec_output.log || echo 0)
+          FAILED_CONTROLS=$(grep -oP '(?<=, )\d+(?= control failure)' $(System.DefaultWorkingDirectory)/inspec_output.log || echo 0)
 
           echo "Failed Controls: $FAILED_CONTROLS"
         displayName: 'Run InSpec Compliance Tests'
@@ -278,6 +278,7 @@ stages:
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'backstage-inspec-test-results.xml'
+          searchFolder: '$(System.DefaultWorkingDirectory)'
           testRunTitle: 'InSpec Compliance Tests'
         condition: succeededOrFailed()
 
@@ -356,15 +357,6 @@ stages:
           ArtifactName: 'SAST_Analysis_Report'
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/sast-analysis'
         condition: succeededOrFailed()
-
-      # Limpieza de permisos por si Docker creó archivos como root
-      # (Ya no es necesaria: el docker run usa --user $(id -u):$(id -g))
-      # - task: CmdLine@2
-      #   displayName: 'Fix permissions'
-      #   condition: always()
-      #   inputs:
-      #     script: |
-      #       sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
         
 # ----------------------------------------------------------------
 # ETAPA 5: Docker & Artifact Management
