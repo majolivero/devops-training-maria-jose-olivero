@@ -253,22 +253,21 @@ stages:
         displayName: 'Install InSpec'
 
       - script: |
-          export CHEF_LICENSE=accept
+          export CHEF_LICENSE=accept-no-persist
           cd $(System.DefaultWorkingDirectory)
 
           echo "##[command] inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
-          inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile
+          inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
+            --chef-license accept-no-persist
 
           echo "##[command] inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
           inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
-            --chef-license accept-silent \
+            --chef-license accept-no-persist \
             --reporter cli \
             "junit:$(System.DefaultWorkingDirectory)/backstage-inspec-test-results.xml" \
             --no-color | tee $(System.DefaultWorkingDirectory)/inspec_output.log
 
-          # Extraer el número de control failures desde la línea "Profile Summary"
           FAILED_CONTROLS=$(grep -oP '(?<=, )\d+(?= control failure)' $(System.DefaultWorkingDirectory)/inspec_output.log || echo 0)
-
           echo "Failed Controls: $FAILED_CONTROLS"
         displayName: 'Run InSpec Compliance Tests'
         continueOnError: true
