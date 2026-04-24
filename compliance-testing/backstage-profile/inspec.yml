@@ -1,0 +1,10 @@
+name: backstage-profile
+title: Backstage Project Structure Compliance
+maintainer: DevOps Team
+copyright: Quind
+copyright_email: devops@quind.co
+license: Apache-2.0
+summary: Verifica que la estructura de carpetas y archivos del proyecto cumple con los estandares definidos
+version: 1.0.0
+supports:
+  - platform: unix
