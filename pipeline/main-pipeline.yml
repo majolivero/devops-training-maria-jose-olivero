@@ -244,14 +244,7 @@ stages:
         fetchDepth: 1
 
       - script: |
-          INSPEC_VERSION=$(inspec --version 2>/dev/null | head -1 || echo "0")
-          MAJOR=$(echo "$INSPEC_VERSION" | cut -d. -f1)
-          if [[ "$MAJOR" -ge 6 ]] || ! command -v inspec &>/dev/null; then
-            echo "Instalando InSpec 5 (última versión gratuita)..."
-            curl -fsSL https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec -v 5
-          else
-            echo "InSpec ya está instalado: $INSPEC_VERSION"
-          fi
+          echo "InSpec version: $(inspec --version)"
         displayName: 'Install InSpec'
 
       - script: |
