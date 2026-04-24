@@ -349,12 +349,13 @@ stages:
         condition: succeededOrFailed()
 
       # Limpieza de permisos por si Docker creó archivos como root
-      - task: CmdLine@2
-        displayName: 'Fix permissions'
-        condition: always()
-        inputs:
-          script: |
-            sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
+      # (Ya no es necesaria: el docker run usa --user $(id -u):$(id -g))
+      # - task: CmdLine@2
+      #   displayName: 'Fix permissions'
+      #   condition: always()
+      #   inputs:
+      #     script: |
+      #       sudo chown -R $(whoami):$(whoami) $(Build.ArtifactStagingDirectory) 2>/dev/null || true
         
 # ----------------------------------------------------------------
 # ETAPA 5: Docker & Artifact Management
