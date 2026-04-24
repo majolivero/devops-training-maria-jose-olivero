@@ -244,6 +244,15 @@ stages:
         fetchDepth: 1
 
       - script: |
+          if ! command -v inspec &>/dev/null; then
+            echo "Instalando InSpec..."
+            curl -fsSL https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec
+          else
+            echo "InSpec ya está instalado: $(inspec --version)"
+          fi
+        displayName: 'Install InSpec'
+
+      - script: |
           export CHEF_LICENSE=accept
           echo "##[command] inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
           inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile
