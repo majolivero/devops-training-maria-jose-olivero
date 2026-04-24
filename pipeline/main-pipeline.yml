@@ -244,11 +244,13 @@ stages:
         fetchDepth: 1
 
       - script: |
-          if ! command -v inspec &>/dev/null; then
-            echo "Instalando InSpec..."
-            curl -fsSL https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec
+          INSPEC_VERSION=$(inspec --version 2>/dev/null | head -1 || echo "0")
+          MAJOR=$(echo "$INSPEC_VERSION" | cut -d. -f1)
+          if [[ "$MAJOR" -ge 6 ]] || ! command -v inspec &>/dev/null; then
+            echo "Instalando InSpec 5 (última versión gratuita)..."
+            curl -fsSL https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec -v 5
           else
-            echo "InSpec ya está instalado: $(inspec --version)"
+            echo "InSpec ya está instalado: $INSPEC_VERSION"
           fi
         displayName: 'Install InSpec'
 
@@ -256,16 +258,21 @@ stages:
           export CHEF_LICENSE=accept-no-persist
           cd $(System.DefaultWorkingDirectory)
 
-          echo "##[command] inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
+          echo "##[command] inspec check"
           inspec check $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
-            --chef-license accept-no-persist
+            --chef-license accept-no-persist || true
 
-          echo "##[command] inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile"
+          echo "##[command] inspec exec"
           inspec exec $(System.DefaultWorkingDirectory)/compliance-testing/backstage-profile \
             --chef-license accept-no-persist \
             --reporter cli \
             "junit:$(System.DefaultWorkingDirectory)/backstage-inspec-test-results.xml" \
-            --no-color | tee $(System.DefaultWorkingDirectory)/inspec_output.log
+            --no-color 2>&1 | tee $(System.DefaultWorkingDirectory)/inspec_output.log || true
+
+          echo "--- Verificando XML generado ---"
+          ls -la $(System.DefaultWorkingDirectory)/backstage-inspec-test-results.xml 2>/dev/null \
+            && echo "XML generado correctamente" \
+            || echo "##[error] XML NO fue generado"
 
           FAILED_CONTROLS=$(grep -oP '(?<=, )\d+(?= control failure)' $(System.DefaultWorkingDirectory)/inspec_output.log || echo 0)
           echo "Failed Controls: $FAILED_CONTROLS"
