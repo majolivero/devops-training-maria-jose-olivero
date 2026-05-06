@@ -97,3 +97,12 @@ Helm chart at `helm/calculadora/` is the primary deployment method. `k8s/calcula
 ### Compliance Testing (`compliance-testing/backstage-profile/`)
 
 InSpec profile with 10 controls that verify the presence of all required project files. Controls run against the local filesystem (not a remote target). Impact levels: 1.0 for critical files (Dockerfile, pipeline, Terraform), 0.7 for Java classes, 0.5 for documentation.
+
+## Key File References
+
+@pipeline/main-pipeline.yml
+@pipeline/templates/base-pipeline.yml
+@build.gradle
+@GitVersion.yml
+@terraform/variables.tf
+@compliance-testing/backstage-profile/controls/project_structure.rb
