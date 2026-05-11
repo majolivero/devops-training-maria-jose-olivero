@@ -42,23 +42,29 @@
       /write_tests src/main/java/com/entrenamiento/Calculadora/controlador/controlador.java
 -->
 
-Lee el archivo $ARGUMENTS y genera tests unitarios completos para él.
+Lee el archivo $ARGUMENTS y determina qué tests hacen falta antes de escribir cualquier código.
 
-Sigue estas reglas:
+Sigue estos pasos en orden:
 
-1. **Analiza la clase** — identifica todos los métodos públicos, sus parámetros, tipos de retorno y posibles excepciones.
+1. **Detecta el archivo de test existente** — deriva la ruta espejando el paquete en `src/test/java/`. Si el archivo existe, léelo completo. Si no existe, continúa al paso 2 directamente.
 
-2. **Escribe un test por escenario**, no uno por método. Para cada método cubre:
+2. **Analiza la clase fuente** — identifica todos los métodos públicos, sus parámetros, tipos de retorno y posibles excepciones.
+
+3. **Determina la brecha de cobertura** — compara los métodos de la clase contra los tests existentes (incluyendo los comentados con `/* */`):
+   - Si **todos los métodos tienen cobertura suficiente** (happy path + casos borde + errores): reporta el estado actual y no generes nada más.
+   - Si **hay métodos sin tests o con cobertura parcial**: lista exactamente qué falta antes de proceder.
+
+4. **Escribe solo los tests faltantes** — no dupliques tests que ya existen. Para cada método sin cobertura escribe:
    - Happy path con valores representativos
-   - Casos borde: null, cero, negativos, strings vacíos, listas vacías según aplique
+   - Casos borde: null, cero, negativos, strings vacíos según aplique
    - Excepciones esperadas usando `assertThrows`
 
-3. **Convenciones del proyecto**:
+5. **Convenciones del proyecto**:
    - JUnit 5 (`@Test`, `@ExtendWith(MockitoExtension.class)`)
    - Usa `@SpringBootTest` solo si la clase requiere contexto de Spring
    - Nombres de método: `metodo_escenario_resultadoEsperado` (snake_case)
    - Sin comentarios que describan qué hace el test — el nombre debe ser suficiente
 
-4. **Ubicación del archivo generado**: `src/test/java/` espejando el paquete del archivo fuente.
-
-5. **Al finalizar**, indica la ruta exacta donde se creó el archivo de test y el porcentaje estimado de cobertura de ramas que aportarían estos tests.
+6. **Al finalizar**, indica:
+   - Si se generaron tests nuevos: la ruta del archivo y los métodos que ahora quedan cubiertos.
+   - Si no se generaron: por qué la cobertura existente ya es suficiente.
