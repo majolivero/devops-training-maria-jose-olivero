@@ -1,37 +1,77 @@
-name: Claude Code
+name: Claude Code  #Nombre que aparecerá en la pestaña de Actions de GitHub
 
+# ============================================================
+# DISPARADORES (TRIGGERS)
+# Activa el workflow cuando alguien interactúa en GitHub con
+# un comentario, review o issue que mencione @claude. El workflow se dispara en 4 situaciones: 
+# ============================================================
 on:
   issue_comment:
-    types: [created]
+    types: [created]              # Comentario nuevo en un issue
   pull_request_review_comment:
-    types: [created]
+    types: [created]              # Comentario nuevo en una línea de código de un PR
   issues:
-    types: [opened, assigned]
+    types: [opened, assigned]     # Issue recién abierto o asignado
   pull_request_review:
-    types: [submitted]
+    types: [submitted]            # Review enviado en un PR
 
 jobs:
   claude:
+    # ============================================================
+    # CONDICIÓN DE EJECUCIÓN
+    # El job solo corre si el cuerpo del evento menciona @claude,
+    # evitando ejecuciones innecesarias en cada comentario.
+    # ============================================================
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+
+    # ============================================================
+    #DONDE CORRE: Corre en una VM Ubuntu de GitHUb con Node.js 24
+    # ============================================================
+
     runs-on: ubuntu-latest
+
+    # ============================================================
+    # VARIABLES DE ENTORNO
+    # Fuerza el uso de Node.js 24 en las GitHub Actions para
+    # compatibilidad con las dependencias de claude-code-action.
+    # ============================================================
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    # ============================================================
+    # PERMISOS
+    # Mínimos necesarios para que Claude pueda leer el repo,
+    # escribir comentarios en PRs/issues y leer resultados de CI.
+    #Le dice a GitHub qué puede hacer Claude dentro del repositorio. 
+    # ============================================================
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      contents: write        # Leer y escribir archivos del repositorio
+      pull-requests: write   # Comentar y actualizar PRs
+      issues: write          # Comentar y actualizar issues
+      id-token: write        # Autenticación OIDC
+      actions: read          # Leer resultados de CI en PRs
+
     steps:
+      # ============================================================
+      # PASO 1: Checkout
+      # Descarga mi código en la VM para que Claude pueda leerlo. fetch-depth: 1 trae solo el
+      # último commit (suficiente para que Claude lea los archivos).
+      # ============================================================
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
+      # ============================================================
+      # PASO 2: Ejecutar Claude Code
+      # Invoca la action oficial de Anthropic. El token OAuth
+      # viene del secret del repositorio y el modelo se fija
+      # explícitamente para evitar cambios por defecto inesperados.
+      # ============================================================
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1.0.1
