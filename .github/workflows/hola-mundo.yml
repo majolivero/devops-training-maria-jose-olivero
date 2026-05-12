@@ -1,0 +1,17 @@
+name: Hola Mundo
+
+on:
+  workflow_dispatch:  # Se ejecuta manualmente
+
+jobs:
+  hola:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Imprimir Hola Mundo
+        run: echo "¡Hola Mundo desde GitHub Actions!"
+
+      - name: Mostrar fecha
+        run: date
+
+      - name: Mostrar info del sistema
+        run: uname -a
