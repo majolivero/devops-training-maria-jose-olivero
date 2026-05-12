@@ -1,0 +1,11 @@
+name: Dia de la semana
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decir el dia
+        run: echo "Hoy es martes"
