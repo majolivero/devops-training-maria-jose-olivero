@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.http.MediaType;
 
+// Prueba de PR Review con Claude Code
 @CrossOrigin(origins = "*")
 @RestController
 
