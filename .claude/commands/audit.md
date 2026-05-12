@@ -32,9 +32,10 @@
 
   EJEMPLO DE USO:
       /audit pipeline/main-pipeline.yml
+      /audit pipeline/main-pipeline.yml terraform/variables.tf
 -->
 
-Audita el archivo $ARGUMENTS y reporta lo siguiente:
+Audita cada uno de los archivos listados en "$ARGUMENTS" (pueden ser uno o varios, separados por espacios) y reporta lo siguiente por cada archivo:
 
 1. **Tokens sin reemplazar** — busca patrones `#{...}#` que estén hardcodeados en lugar de venir de variables.
 2. **Stages o jobs sin `displayName`** — toda tarea debe tener nombre descriptivo.
