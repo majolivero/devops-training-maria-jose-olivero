@@ -1,0 +1,64 @@
+name: Claude PR Review
+
+# ============================================================
+# DISPARADORES (TRIGGERS)
+# Se activa automáticamente cuando se abre o actualiza un PR.
+# ============================================================
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]  # PR nuevo, con nuevos commits, o reabierto
+
+jobs:
+  pr-review:
+    runs-on: ubuntu-latest
+
+    # ============================================================
+    # PERMISOS
+    # Claude necesita leer el PR y escribir comentarios de review.
+    # ============================================================
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+
+    # ============================================================
+    # VARIABLES DE ENTORNO
+    # ============================================================
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      # ============================================================
+      # PASO 1: Checkout
+      # fetch-depth: 0 trae todo el historial para que Claude pueda
+      # comparar el PR contra la rama base (git diff completo).
+      # ============================================================
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # ============================================================
+      # PASO 2: Claude PR Review
+      # Invoca claude-code-action con un prompt de review.
+      # Claude leerá el diff del PR y publicará un comentario
+      # con el análisis directamente en el Pull Request.
+      # ============================================================
+      - name: Run Claude PR Review
+        id: claude-review
+        uses: anthropics/claude-code-action@v1.0.1
+        with:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--model claude-sonnet-4-6"
+          direct_prompt: |
+            Revisa este Pull Request y proporciona feedback en español sobre:
+            1. Posibles bugs o errores lógicos
+            2. Problemas de seguridad (secretos expuestos, inyecciones, etc.)
+            3. Calidad del código (legibilidad, duplicación, complejidad)
+            4. Consistencia con el estilo del proyecto
+            5. Riesgos en el pipeline o infraestructura si aplica
+
+            Sé conciso. Para cada hallazgo indica: archivo, línea y recomendación.
+            Si el PR está bien, indícalo brevemente.

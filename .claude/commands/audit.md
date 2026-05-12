@@ -32,9 +32,19 @@
 
   EJEMPLO DE USO:
       /audit pipeline/main-pipeline.yml
+      /audit pipeline/main-pipeline.yml terraform/variables.tf
+
+
+    AUDITAR VARIOS ARCHIVOS A LA VEZ 
+     No hay un límite técnico fijo — $ARGUMENTS es solo texto plano. El límite real es práctico:
+
+    - Ventana de contexto: cada archivo que Claude lee consume tokens. Con archivos grandes como main-pipeline.yml, puedes saturar el contexto con 5–10 archivos pesados.
+    - Calidad del análisis: con muchos archivos a la vez, la auditoría se vuelve más superficial. Para archivos críticos, mejor auditarlos en grupos pequeños.
+
+    Regla práctica: 3–5 archivos por invocación es un buen balance. Si son archivos pequeños como variables.tf, puedes pasar más sin problema.
 -->
 
-Audita el archivo $ARGUMENTS y reporta lo siguiente:
+Audita cada uno de los archivos listados en "$ARGUMENTS" (pueden ser uno o varios, separados por espacios) y reporta lo siguiente por cada archivo:
 
 1. **Tokens sin reemplazar** — busca patrones `#{...}#` que estén hardcodeados en lugar de venir de variables.
 2. **Stages o jobs sin `displayName`** — toda tarea debe tener nombre descriptivo.
