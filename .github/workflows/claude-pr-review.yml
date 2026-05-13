@@ -52,7 +52,7 @@ jobs:
         with:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model claude-sonnet-4-6"
-          direct_prompt: |
+          prompt: |
             Revisa este Pull Request y proporciona feedback en español sobre:
             1. Posibles bugs o errores lógicos
             2. Problemas de seguridad (secretos expuestos, inyecciones, etc.)
