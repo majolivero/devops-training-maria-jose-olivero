@@ -344,6 +344,46 @@ public class controlador {
 
         return area_circle;
     }
+
+    //MODULO
+    @RequestMapping(value = "/modulo", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public resultado modulo(@RequestParam(name = "dividendo", required = false, defaultValue = "") String dividendo,
+                            @RequestParam(name = "divisor", required = false, defaultValue = "") String divisor) {
+
+        resultado exported = new resultado();
+
+        try {
+            // Validar que no estén vacíos
+            if (dividendo.isEmpty() || divisor.isEmpty()) {
+                exported.setEstado("Ambos campos son obligatorios");
+                return exported;
+            }
+
+            // Convertir a float
+            float castDividendo = Float.parseFloat(dividendo);
+            float castDivisor = Float.parseFloat(divisor);
+
+            // Validar que el divisor no sea cero
+            if (castDivisor == 0) {
+                exported.setEstado("Error: No es posible dividir por cero");
+                return exported;
+            }
+
+            // Calcular el módulo: dividendo % divisor
+            float resultado_int = castDividendo % castDivisor;
+
+            // Redondear a 1 decimal
+            resultado_int = Math.round(resultado_int * 10.0f) / 10.0f;
+
+            exported.setResultado(resultado_int);
+            exported.setEstado("ok");
+
+        } catch (NumberFormatException Ex) {
+            exported.setEstado("Carácter invalido, debe ingresar un valor de tipo numérico");
+        }
+
+        return exported;
+    }
 }
 
 
